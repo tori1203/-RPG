@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>목박사 RPG - 전체 장소 추가</title>
+<title>목박사 RPG - 장소별 기능</title>
 <style>
   body {
     background: #111;
@@ -27,18 +27,18 @@
     font-size: 18px;
     margin-bottom: 20px;
   }
-  #choices button {
+  #choices button, #actionBtn {
     background: #444;
     border: none;
     color: #eee;
     padding: 10px 15px;
-    margin: 5px;
+    margin: 5px 5px 5px 0;
     border-radius: 6px;
     cursor: pointer;
     font-size: 16px;
     transition: background 0.3s;
   }
-  #choices button:hover {
+  #choices button:hover, #actionBtn:hover {
     background: #666;
   }
   #locationBtn {
@@ -70,12 +70,16 @@
     width: 100%;
     margin-bottom: 8px;
   }
+  #actionArea {
+    margin-bottom: 20px;
+  }
 </style>
 </head>
 <body>
 
 <div id="stats"></div>
 <div id="dialogue"></div>
+<div id="actionArea"></div>
 <div id="choices"></div>
 
 <button id="locationBtn">장소 이동</button>
@@ -98,6 +102,7 @@
   const choicesDiv = document.getElementById("choices");
   const locationBtn = document.getElementById("locationBtn");
   const locationList = document.getElementById("locationList");
+  const actionArea = document.getElementById("actionArea");
 
   let currentLine = 0;
   let currentScript = [];
@@ -123,7 +128,7 @@
     ],
     "헬스장": [
       { speaker: null, text: "헬스장에 왔습니다. 운동하면 체력이 늘어납니다." },
-      { speaker: null, text: "운동은 아직 미구현 상태입니다.", choices: [
+      { speaker: null, text: "운동은 2000원을 내야 합니다.", choices: [
         { text: "튜토리얼로 돌아가기", nextLocation: "튜토리얼" },
         { text: "고물상점으로 이동", nextLocation: "고물상점" },
         { text: "도서관으로 이동", nextLocation: "도서관" }
@@ -138,7 +143,7 @@
     ],
     "도서관": [
       { speaker: null, text: "도서관에 왔습니다. 지식을 쌓을 수 있습니다." },
-      { speaker: null, text: "독서는 체력과 마나 회복에 도움을 줍니다.", choices: [
+      { speaker: null, text: "독서는 2000원을 내야 합니다.", choices: [
         { text: "헬스장으로 이동", nextLocation: "헬스장" },
         { text: "과학실로 이동", nextLocation: "과학실" }
       ]}
@@ -180,6 +185,76 @@
     ]
   };
 
+  // 장소별 고유 기능 버튼 활성화
+  function showActionButton(){
+    actionArea.innerHTML = "";
+    if(currentLocation === "헬스장"){
+      const btn = document.createElement("button");
+      btn.id = "actionBtn";
+      btn.textContent = "운동하기 (2000원)";
+      btn.onclick = () => doExercise();
+      actionArea.appendChild(btn);
+    } else if(currentLocation === "도서관"){
+      const btn = document.createElement("button");
+      btn.id = "actionBtn";
+      btn.textContent = "독서하기 (2000원)";
+      btn.onclick = () => doRead();
+      actionArea.appendChild(btn);
+    } else if(currentLocation === "도박장"){
+      const btn = document.createElement("button");
+      btn.id = "actionBtn";
+      btn.textContent = "도박하기 (운 시험)";
+      btn.onclick = () => gamble();
+      actionArea.appendChild(btn);
+    }
+  }
+
+  // 고유 기능 함수들
+  function doExercise(){
+    if(player.money < 2000){
+      alert("돈이 부족합니다!");
+      return;
+    }
+    player.money -= 2000;
+    player.hp = Math.min(player.hpMax, player.hp + 10);
+    player.turn++;
+    alert("운동으로 체력이 10 회복되었습니다!");
+    updateStats();
+    showLine();
+  }
+
+  function doRead(){
+    if(player.money < 2000){
+      alert("돈이 부족합니다!");
+      return;
+    }
+    player.money -= 2000;
+    player.mp += 10;
+    player.turn++;
+    alert("독서로 마나가 10 회복되었습니다!");
+    updateStats();
+    showLine();
+  }
+
+  function gamble(){
+    if(player.money < 1000){
+      alert("돈이 부족합니다! 도박 시작하려면 최소 1000원이 필요합니다.");
+      return;
+    }
+    const bet = 1000;
+    player.money -= bet;
+    const win = Math.random() < 0.5;
+    if(win){
+      player.money += bet * 2;
+      alert("도박에서 이겼습니다! 돈이 2000원 증가했습니다!");
+    } else {
+      alert("도박에서 졌습니다... 1000원을 잃었습니다.");
+    }
+    player.turn++;
+    updateStats();
+    showLine();
+  }
+
   function updateStats(){
     statsDiv.textContent = `체력: ${player.hp}/${player.hpMax} | 공격력: ${player.atk} | 마나: ${player.mp} | 치명타: ${player.crit}% | 돈: ${player.money}원 | 턴: ${player.turn}`;
   }
@@ -188,6 +263,7 @@
     if(currentLine >= currentScript.length){
       dialogueDiv.textContent = "";
       choicesDiv.innerHTML = "";
+      showActionButton(); // 장소별 액션 버튼 보여주기
       return;
     }
     updateStats();
@@ -229,6 +305,7 @@
     currentScript = locationScripts[name];
     currentLine = 0;
     locationList.style.display = "none";
+    actionArea.innerHTML = "";
     showLine();
   }
 
