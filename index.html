@@ -2,9 +2,9 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<title>목박사 RPG 튜토리얼</title>
+<title>목박사 RPG 확장판</title>
 <style>
-  /* 기존 스타일 그대로 유지 */
+  /* 기본 스타일 유지 (앞과 같음) */
   body {
     margin: 0; padding: 0;
     font-family: 'Arial', sans-serif;
@@ -186,17 +186,22 @@
 </div>
 
 <script>
-  // 기본 스탯
   const playerStats = { hp: 100, atk: 10, mp: 30, crit: 5 };
   let inventory = [
     { id: 1, name: "망가진 팔", qty: 1 },
     { id: 2, name: "모터", qty: 2 },
     { id: 3, name: "마이크로칩", qty: 3 }
   ];
-  const locations = ["작업실", "쓰레기 고물가게", "대장간", "상점"];
-  let currentLocation = "작업실";
 
-  // UI 요소들
+  const locations = [
+    "튜토리얼", 
+    "고물상점", 
+    "푸코상점", 
+    "헬스장", 
+    "도서관"
+  ];
+  let currentLocation = "튜토리얼";
+
   const statHpEl = document.getElementById("stat-hp");
   const statAtkEl = document.getElementById("stat-atk");
   const statMpEl = document.getElementById("stat-mp");
@@ -213,33 +218,60 @@
   const dialogueTextEl = document.getElementById("dialogue-text");
   const choicesEl = document.getElementById("choices");
 
-  // 대사 및 선택지 데이터
-  const script = [
-    { speaker: "박사", text: "드디어....드디어 인류 최고의 발명품을 만들었어요!" },
-    { speaker: "조수", text: "그게 뭔데요 박사님?" },
-    { speaker: "박사", text: "내 모모짱을 닮은 무드등" },
-    { speaker: "조수", text: "아니 그걸 누가써요;;" },
-    { speaker: "박사", text: "...아 그런가?" },
-    { speaker: "조수", text: "하....저도 이제 지겹다고요!! 언제까지 그렇게 하실거에요!!!" },
-    { speaker: "박사", text: "내가 미안하다 광칠아..." },
-    { speaker: "조수", text: "하...저도 이젠 더이상 못해요! 전 갈꺼에요" },
-    { speaker: "박사", text: "아니 나에게 1개월, 아니 1주일만 시간을 주게!!!" },
-    { speaker: "조수", text: "늦었어요, 이거나 받고 꺼지세요" },
-    { speaker: null, text: "(만원 한장을 주고 작업실을 떠난 조수....)" },
-    { speaker: "박사", text: "이젠 진짜 혼자가 됐어......." },
-    { speaker: "박사", text: "안돼겠어! 나 목박사 꼭 우주최강 박사가 될 태다!!!" },
-    // 선택지 예시
-    { choice: true, choices: [
-      { text: "목박사에게 계속 힘을 불어넣는다", next: 14 },
-      { text: "포기하고 쉬기로 한다", next: 99 }
-    ]},
-    { speaker: "박사", text: "그래, 나는 반드시 해낼 거야!" },
-    // ... 이후 스토리 계속
-  ];
+  // 장소별 스크립트 (대사 + 선택지)
+  const scripts = {
+    "튜토리얼": [
+      { speaker: "박사", text: "드디어....드디어 인류 최고의 발명품을 만들었어요!" },
+      { speaker: "조수", text: "그게 뭔데요 박사님?" },
+      { speaker: "박사", text: "내 모모짱을 닮은 무드등" },
+      { speaker: "조수", text: "아니 그걸 누가써요;;" },
+      { speaker: "박사", text: "...아 그런가?" },
+      { speaker: "조수", text: "하....저도 이제 지겹다고요!! 언제까지 그렇게 하실거에요!!!" },
+      { speaker: "박사", text: "내가 미안하다 광칠아..." },
+      { speaker: "조수", text: "하...저도 이젠 더이상 못해요! 전 갈꺼에요" },
+      { speaker: "박사", text: "아니 나에게 1개월, 아니 1주일만 시간을 주게!!!" },
+      { speaker: "조수", text: "늦었어요, 이거나 받고 꺼지세요" },
+      { speaker: null, text: "(만원 한장을 주고 작업실을 떠난 조수....)" },
+      { speaker: "박사", text: "이젠 진짜 혼자가 됐어......." },
+      { speaker: "박사", text: "안돼겠어! 나 목박사 꼭 우주최강 박사가 될 태다!!!" }
+    ],
+    "고물상점": [
+      { speaker: null, text: "고물상점에 도착했습니다. 여기서는 고철과 부품을 살 수 있어요." },
+      { choice: true, choices: [
+        { text: "부품을 구매한다", next: 2 },
+        { text: "돌아간다", next: 99 }
+      ]},
+      { speaker: "상인", text: "좋은 부품 고르셨습니다. 감사합니다!" }
+    ],
+    "푸코상점": [
+      { speaker: null, text: "푸코상점입니다. 특별한 발명 아이템이 있습니다." },
+      { choice: true, choices: [
+        { text: "아이템 구경하기", next: 2 },
+        { text: "돌아간다", next: 99 }
+      ]},
+      { speaker: "푸코", text: "최고의 아이템을 가져왔어요!" }
+    ],
+    "헬스장": [
+      { speaker: null, text: "헬스장에 왔습니다. 체력을 키울 수 있어요." },
+      { choice: true, choices: [
+        { text: "운동한다", next: 2 },
+        { text: "돌아간다", next: 99 }
+      ]},
+      { speaker: "트레이너", text: "잘했어요! 체력이 10 증가했습니다." }
+    ],
+    "도서관": [
+      { speaker: null, text: "도서관입니다. 새로운 지식을 얻을 수 있어요." },
+      { choice: true, choices: [
+        { text: "책을 읽는다", next: 2 },
+        { text: "돌아간다", next: 99 }
+      ]},
+      { speaker: "사서", text: "좋은 책을 발견했습니다!" }
+    ]
+  };
 
+  let currentScript = scripts[currentLocation];
   let currentLine = 0;
 
-  // 스탯 업데이트
   function updateStats() {
     statHpEl.textContent = playerStats.hp;
     statAtkEl.textContent = playerStats.atk;
@@ -247,7 +279,6 @@
     statCritEl.textContent = playerStats.crit + "%";
   }
 
-  // 인벤토리 팝업 열기/닫기
   inventoryBtn.onclick = () => {
     renderInventory();
     inventoryPopup.style.display = "block";
@@ -269,7 +300,6 @@
     });
   }
 
-  // 장소 이동 팝업 열기/닫기
   locationBtn.onclick = () => {
     renderLocations();
     locationPopup.style.display = "block";
@@ -285,19 +315,23 @@
       div.textContent = loc;
       div.onclick = () => {
         currentLocation = loc;
+        currentScript = scripts[loc];
+        currentLine = 0;
         locationPopup.style.display = "none";
-        alert(`${loc} 으로 이동했습니다!`);
-        // TODO: 장소 이동 시 이벤트 처리 넣기
+        showLine();
       };
       locationList.appendChild(div);
     });
   }
 
-  // 대사 출력 함수
   function showLine() {
     clearChoices();
-    const line = script[currentLine];
-    if (!line) return;
+    if(currentLine >= currentScript.length) {
+      speakerEl.textContent = "";
+      dialogueTextEl.textContent = "장면이 끝났습니다. 다른 장소로 이동하세요.";
+      return;
+    }
+    const line = currentScript[currentLine];
     if(line.choice) {
       showChoices(line.choices);
       return;
@@ -306,7 +340,6 @@
     dialogueTextEl.textContent = line.text;
   }
 
-  // 선택지 렌더링
   function showChoices(choices) {
     choicesEl.innerHTML = "";
     choices.forEach(choice => {
@@ -314,17 +347,22 @@
       btn.className = "choice-btn";
       btn.textContent = choice.text;
       btn.onclick = () => {
-        currentLine = choice.next;
+        if(choice.next === 99){
+          // 99는 '돌아간다' 시나리오로 그냥 현재 장소 스크립트 처음으로 돌아가기
+          currentLine = 0;
+        } else {
+          currentLine = choice.next;
+        }
         showLine();
       };
       choicesEl.appendChild(btn);
     });
   }
+
   function clearChoices() {
     choicesEl.innerHTML = "";
   }
 
-  // 엔터키로 대사 진행
   window.addEventListener("keydown", (e) => {
     if(e.key === "Enter") {
       if(choicesEl.childElementCount === 0) {
