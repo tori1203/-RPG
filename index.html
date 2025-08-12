@@ -422,6 +422,14 @@
         clearInterval(typingTimer);
         if(line.choice){
           showChoices(line.choices);
+        } else {
+          // 대사가 끝나면 Enter키로 다음 진행
+          document.onkeydown = (e) => {
+            if(e.key === "Enter"){
+              currentLine++;
+              showLine();
+            }
+          };
         }
       }
     }, 30);
@@ -446,14 +454,3 @@
       const btn = document.createElement("button");
       btn.className = "choice-btn";
       btn.textContent = choice.text;
-      btn.onclick = () => {
-        handleChoice(choice);
-      };
-      choicesEl.appendChild(btn);
-    });
-  }
-
-  // 선택지 처리
-  function handleChoice(choice) {
-    if(choice.next !== undefined){
-      currentLine =
