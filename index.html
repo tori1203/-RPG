@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>목박사 RPG - 최소 동작 예제</title>
+<title>목박사 RPG - 장소 시스템</title>
 <style>
   body {
     background: #111;
@@ -41,6 +41,34 @@
   #choices button:hover {
     background: #666;
   }
+  #locationBtn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: #333;
+    border: none;
+    color: #eee;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  #locationList {
+    position: fixed;
+    bottom: 70px;
+    left: 20px;
+    background: #222;
+    border-radius: 8px;
+    padding: 10px;
+    max-width: 300px;
+    display: none;
+    box-shadow: 0 0 15px #000;
+    z-index: 100;
+  }
+  #locationList button {
+    width: 100%;
+    margin-bottom: 8px;
+  }
 </style>
 </head>
 <body>
@@ -49,9 +77,11 @@
 <div id="dialogue"></div>
 <div id="choices"></div>
 
+<button id="locationBtn">장소 이동</button>
+<div id="locationList"></div>
+
 <script>
 (() => {
-  // 플레이어 기본 정보
   const player = {
     hpMax: 100,
     hp: 100,
@@ -62,76 +92,79 @@
     turn: 1,
   };
 
-  // 게임 대사 스크립트
-  const scripts = [
-    { speaker: "박사", text: "드디어....드디어 인류 최고의 발명품을 만들었어요!" },
-    { speaker: "조수", text: "그게 뭔데요 박사님?" },
-    { speaker: "박사", text: "내 모모짱을 닮은 무드등" },
-    { speaker: "조수", text: "아니 그걸 누가 써요;;" },
-    { speaker: "박사", text: "...아 그런가?" },
-    { speaker: "조수", text: "하....저도 이제 지겹다고요!! 언제까지 그렇게 하실 거에요!!!" },
-    { speaker: "박사", text: "내가 미안하다 광칠아..." },
-    { speaker: "조수", text: "하...저도 이젠 더 이상 못해요! 전 갈 거예요" },
-    { speaker: "박사", text: "아니, 나에게 1개월, 아니 1주일만 시간을 주게!!!" },
-    { speaker: "조수", text: "늦었어요, 이거나 받고 꺼지세요" },
-    { speaker: null, text: "(만원 한 장을 주고 작업실을 떠난 조수....)" },
-    { speaker: "박사", text: "이젠 진짜 혼자가 됐어......." },
-    { speaker: "박사", text: "안돼겠어! 나 목박사 꼭 우주 최강 박사가 될 테다!!!" },
-    { 
-      speaker: null, 
-      text: "이제 모험을 시작할까요?", 
-      choices: [
-        { text: "네, 시작해요!", next: 14 },
-        { text: "아니요, 다시 보여주세요.", next: 0 }
-      ] 
-    },
-    { speaker: "박사", text: "좋아요! 모험을 시작합니다!" }
-  ];
-
-  // UI 엘리먼트
   const statsDiv = document.getElementById("stats");
   const dialogueDiv = document.getElementById("dialogue");
   const choicesDiv = document.getElementById("choices");
+  const locationBtn = document.getElementById("locationBtn");
+  const locationList = document.getElementById("locationList");
 
   let currentLine = 0;
+  let currentScript = [];
+  let currentLocation = "튜토리얼";
 
-  // 스탯 업데이트 함수
-  function updateStats() {
+  // 장소별 스크립트
+  const locationScripts = {
+    "튜토리얼": [
+      { speaker: "박사", text: "튜토리얼 장소에 왔습니다." },
+      { speaker: "박사", text: "기본적인 조작법을 익힙니다." },
+      { speaker: "박사", text: "엔터키로 다음을 넘기고, 선택지는 클릭하세요." },
+      { speaker: null, text: "이제 다른 장소로 이동해보세요.", choices: [
+        { text: "고물상점으로 이동", nextLocation: "고물상점" },
+        { text: "헬스장으로 이동", nextLocation: "헬스장" }
+      ]},
+    ],
+
+    "고물상점": [
+      { speaker: null, text: "고물상점에 도착했습니다. 부품을 구매할 수 있습니다." },
+      { speaker: null, text: "하지만 아직 구매 시스템은 없어요.", choices: [
+        { text: "튜토리얼로 돌아가기", nextLocation: "튜토리얼" },
+        { text: "헬스장으로 이동", nextLocation: "헬스장" }
+      ]}
+    ],
+
+    "헬스장": [
+      { speaker: null, text: "헬스장에 왔습니다. 운동하면 체력이 늘어납니다." },
+      { speaker: null, text: "운동은 아직 미구현 상태입니다.", choices: [
+        { text: "튜토리얼로 돌아가기", nextLocation: "튜토리얼" },
+        { text: "고물상점으로 이동", nextLocation: "고물상점" }
+      ]}
+    ]
+  };
+
+  function updateStats(){
     statsDiv.textContent = `체력: ${player.hp}/${player.hpMax} | 공격력: ${player.atk} | 마나: ${player.mp} | 치명타: ${player.crit}% | 돈: ${player.money}원 | 턴: ${player.turn}`;
   }
 
-  // 대사 및 선택지 표시 함수
-  function showLine() {
-    updateStats();
-
-    if (currentLine < 0 || currentLine >= scripts.length) {
-      dialogueDiv.textContent = "게임이 종료되었습니다.";
+  function showLine(){
+    if(currentLine >= currentScript.length){
+      // 대사가 끝났으면 선택지 없으면 기본 선택지 띄우기
+      dialogueDiv.textContent = "";
       choicesDiv.innerHTML = "";
       return;
     }
-
-    const line = scripts[currentLine];
+    updateStats();
+    const line = currentScript[currentLine];
     dialogueDiv.textContent = (line.speaker ? line.speaker + ": " : "") + (line.text || "");
-
     choicesDiv.innerHTML = "";
 
-    if (line.choices) {
-      // 선택지가 있을 경우 버튼 생성
+    if(line.choices){
       line.choices.forEach(choice => {
         const btn = document.createElement("button");
         btn.textContent = choice.text;
         btn.onclick = () => {
-          currentLine = choice.next;
-          showLine();
-        };
+          if(choice.nextLocation){
+            goToLocation(choice.nextLocation);
+          } else if(choice.next !== undefined){
+            currentLine = choice.next;
+            showLine();
+          }
+        }
         choicesDiv.appendChild(btn);
       });
-      // 키보드 이벤트 비활성화 (선택지 있을 때는 엔터 무시)
       document.onkeydown = null;
     } else {
-      // 선택지 없으면 엔터키로 다음 대사
       document.onkeydown = (e) => {
-        if (e.key === "Enter") {
+        if(e.key === "Enter"){
           currentLine++;
           showLine();
         }
@@ -139,8 +172,37 @@
     }
   }
 
-  // 초기화 및 시작
-  showLine();
+  function goToLocation(name){
+    if(!locationScripts[name]){
+      alert("해당 장소가 없습니다: " + name);
+      return;
+    }
+    currentLocation = name;
+    currentScript = locationScripts[name];
+    currentLine = 0;
+    locationList.style.display = "none";
+    showLine();
+  }
+
+  locationBtn.onclick = () => {
+    if(locationList.style.display === "block"){
+      locationList.style.display = "none";
+      return;
+    }
+    locationList.innerHTML = "";
+    Object.keys(locationScripts).forEach(loc => {
+      const btn = document.createElement("button");
+      btn.textContent = loc;
+      btn.onclick = () => {
+        goToLocation(loc);
+      };
+      locationList.appendChild(btn);
+    });
+    locationList.style.display = "block";
+  };
+
+  // 초기화
+  goToLocation("튜토리얼");
 })();
 </script>
 
