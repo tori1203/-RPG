@@ -3,12 +3,44 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>목박사 RPG 간소화판</title>
+<title>목박사 RPG - 최소 동작 예제</title>
 <style>
-  body { background: #111; color: #eee; font-family: Arial, sans-serif; margin:0; padding:20px;}
-  #stats { margin-bottom: 10px; }
-  button { margin:5px; padding:8px 12px; font-size:14px; cursor:pointer; }
-  #dialogue { white-space: pre-wrap; min-height: 50px; margin-bottom: 10px; }
+  body {
+    background: #111;
+    color: #eee;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    user-select: none;
+  }
+  #stats {
+    margin-bottom: 20px;
+    font-size: 16px;
+    background: #222;
+    padding: 10px;
+    border-radius: 8px;
+  }
+  #dialogue {
+    background: #222;
+    padding: 15px;
+    border-radius: 8px;
+    min-height: 70px;
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+  #choices button {
+    background: #444;
+    border: none;
+    color: #eee;
+    padding: 10px 15px;
+    margin: 5px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s;
+  }
+  #choices button:hover {
+    background: #666;
+  }
 </style>
 </head>
 <body>
@@ -19,57 +51,87 @@
 
 <script>
 (() => {
-  const player = { hp:100, atk:10, mp:30, crit:5, money:10000, turn:1 };
-  let currentScript = [];
-  let currentLine = 0;
-
-  const statsDiv = document.getElementById('stats');
-  const dialogueDiv = document.getElementById('dialogue');
-  const choicesDiv = document.getElementById('choices');
-
-  const scripts = {
-    "start": [
-      { speaker:"박사", text:"목박사 RPG에 오신 걸 환영합니다!" },
-      { speaker:"박사", text:"준비가 되셨나요?" , choice:true, choices:[
-        { text:"네! 시작해요", next:3 },
-        { text:"아니요, 더 설명해줘요", next:1 }
-      ]},
-      { speaker:"박사", text:"조금 더 설명할게요. 이 게임은 텍스트 기반입니다.\n엔터키로 다음 대사를 넘기고, 선택지는 클릭하세요.", next:0 },
-      { speaker:"박사", text:"좋아요, 이제 모험을 시작합니다!" }
-    ]
+  // 플레이어 기본 정보
+  const player = {
+    hpMax: 100,
+    hp: 100,
+    atk: 10,
+    mp: 30,
+    crit: 5,
+    money: 10000,
+    turn: 1,
   };
 
-  function updateStats(){
-    statsDiv.textContent = 
-      `체력: ${player.hp} | 공격력: ${player.atk} | 마나: ${player.mp} | 치명타: ${player.crit}% | 돈: ${player.money}원 | 턴: ${player.turn}`;
+  // 게임 대사 스크립트
+  const scripts = [
+    { speaker: "박사", text: "드디어....드디어 인류 최고의 발명품을 만들었어요!" },
+    { speaker: "조수", text: "그게 뭔데요 박사님?" },
+    { speaker: "박사", text: "내 모모짱을 닮은 무드등" },
+    { speaker: "조수", text: "아니 그걸 누가 써요;;" },
+    { speaker: "박사", text: "...아 그런가?" },
+    { speaker: "조수", text: "하....저도 이제 지겹다고요!! 언제까지 그렇게 하실 거에요!!!" },
+    { speaker: "박사", text: "내가 미안하다 광칠아..." },
+    { speaker: "조수", text: "하...저도 이젠 더 이상 못해요! 전 갈 거예요" },
+    { speaker: "박사", text: "아니, 나에게 1개월, 아니 1주일만 시간을 주게!!!" },
+    { speaker: "조수", text: "늦었어요, 이거나 받고 꺼지세요" },
+    { speaker: null, text: "(만원 한 장을 주고 작업실을 떠난 조수....)" },
+    { speaker: "박사", text: "이젠 진짜 혼자가 됐어......." },
+    { speaker: "박사", text: "안돼겠어! 나 목박사 꼭 우주 최강 박사가 될 테다!!!" },
+    { 
+      speaker: null, 
+      text: "이제 모험을 시작할까요?", 
+      choices: [
+        { text: "네, 시작해요!", next: 14 },
+        { text: "아니요, 다시 보여주세요.", next: 0 }
+      ] 
+    },
+    { speaker: "박사", text: "좋아요! 모험을 시작합니다!" }
+  ];
+
+  // UI 엘리먼트
+  const statsDiv = document.getElementById("stats");
+  const dialogueDiv = document.getElementById("dialogue");
+  const choicesDiv = document.getElementById("choices");
+
+  let currentLine = 0;
+
+  // 스탯 업데이트 함수
+  function updateStats() {
+    statsDiv.textContent = `체력: ${player.hp}/${player.hpMax} | 공격력: ${player.atk} | 마나: ${player.mp} | 치명타: ${player.crit}% | 돈: ${player.money}원 | 턴: ${player.turn}`;
   }
 
-  function showLine(){
-    const line = currentScript[currentLine];
-    if(!line){
-      dialogueDiv.textContent = "끝났습니다.";
+  // 대사 및 선택지 표시 함수
+  function showLine() {
+    updateStats();
+
+    if (currentLine < 0 || currentLine >= scripts.length) {
+      dialogueDiv.textContent = "게임이 종료되었습니다.";
       choicesDiv.innerHTML = "";
       return;
     }
-    updateStats();
-    dialogueDiv.textContent = (line.speaker ? line.speaker + ": " : "") + line.text;
+
+    const line = scripts[currentLine];
+    dialogueDiv.textContent = (line.speaker ? line.speaker + ": " : "") + (line.text || "");
+
     choicesDiv.innerHTML = "";
 
-    if(line.choice){
-      line.choices.forEach(choice=>{
-        const btn = document.createElement('button');
+    if (line.choices) {
+      // 선택지가 있을 경우 버튼 생성
+      line.choices.forEach(choice => {
+        const btn = document.createElement("button");
         btn.textContent = choice.text;
         btn.onclick = () => {
-          if(choice.next !== undefined){
-            currentLine = choice.next;
-            showLine();
-          }
+          currentLine = choice.next;
+          showLine();
         };
         choicesDiv.appendChild(btn);
       });
+      // 키보드 이벤트 비활성화 (선택지 있을 때는 엔터 무시)
+      document.onkeydown = null;
     } else {
+      // 선택지 없으면 엔터키로 다음 대사
       document.onkeydown = (e) => {
-        if(e.key === "Enter"){
+        if (e.key === "Enter") {
           currentLine++;
           showLine();
         }
@@ -77,13 +139,8 @@
     }
   }
 
-  function start(){
-    currentScript = scripts["start"];
-    currentLine = 0;
-    showLine();
-  }
-
-  start();
+  // 초기화 및 시작
+  showLine();
 })();
 </script>
 
