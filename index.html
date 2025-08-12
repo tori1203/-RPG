@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>목박사 RPG</title>
+<title>목박사 RPG 완성판</title>
 <style>
   body {
     margin: 0; padding: 0;
@@ -26,7 +26,6 @@
   }
   #inventory-btn, #location-btn {
     position: fixed;
-    top: 10px;
     background: #333;
     border: 2px solid #666;
     border-radius: 8px;
@@ -42,7 +41,7 @@
   #inventory-btn:hover, #location-btn:hover {
     background-color: #555;
   }
-  #inventory-btn { right: 10px; }
+  #inventory-btn { right: 10px; top: 10px; }
   #location-btn { left: 10px; bottom: 10px; top: auto; }
 
   #dialogue-container {
@@ -154,7 +153,6 @@
 </head>
 <body>
 
-<!-- 스탯창 -->
 <div id="stat-panel">
   <div>체력: <span id="stat-hp">100/100</span></div>
   <div>공격력: <span id="stat-atk">10</span></div>
@@ -164,27 +162,21 @@
   <div>턴: <span id="stat-turn">1</span></div>
 </div>
 
-<!-- 인벤토리 버튼 -->
 <div id="inventory-btn" title="인벤토리 열기">인벤토리</div>
-
-<!-- 장소 이동 버튼 -->
 <div id="location-btn" title="장소 이동">장소 이동</div>
 
-<!-- 대화 및 선택지 -->
 <div id="dialogue-container">
   <div id="speaker"></div>
   <div id="dialogue-text"></div>
   <div id="choices"></div>
 </div>
 
-<!-- 인벤토리 팝업 -->
 <div id="inventory-popup" class="popup">
   <button class="popup-close-btn" id="inv-close-btn">닫기</button>
   <h3>인벤토리</h3>
   <div id="inventory-list"></div>
 </div>
 
-<!-- 장소 선택 팝업 -->
 <div id="location-popup" class="popup">
   <button class="popup-close-btn" id="loc-close-btn">닫기</button>
   <h3>장소 선택</h3>
@@ -193,7 +185,6 @@
 
 <script>
 (() => {
-  // --- 플레이어 상태 ---
   const player = {
     hpMax: 100,
     hp: 100,
@@ -204,38 +195,23 @@
     turn: 1,
   };
 
-  // 인벤토리 기본 아이템 예시
   let inventory = [
     { id: 1, name: "망가진 팔", qty: 1 },
     { id: 2, name: "모터", qty: 2 },
     { id: 3, name: "마이크로칩", qty: 3 },
   ];
 
-  // 장소 목록
   const locations = [
-    "튜토리얼",
-    "고물상점",
-    "푸코상점",
-    "헬스장",
-    "도서관",
-    "도박장",
-    "과학실",
-    "제련소",
-    "정보거래소",
-    "판매소",
-    "던전",
+    "튜토리얼", "고물상점", "푸코상점", "헬스장", "도서관",
+    "도박장", "과학실", "제련소", "정보거래소", "판매소", "던전"
   ];
 
-  // 현재 위치, 대사 진행 변수
   let currentLocation = "튜토리얼";
   let currentScript = [];
   let currentLine = 0;
-
-  // 타이핑 효과 변수
-  let typingIndex = 0;
   let typingTimer = null;
+  let typingIndex = 0;
 
-  // --- UI 엘리먼트 ---
   const statHpEl = document.getElementById("stat-hp");
   const statAtkEl = document.getElementById("stat-atk");
   const statMpEl = document.getElementById("stat-mp");
@@ -257,8 +233,6 @@
   const dialogueTextEl = document.getElementById("dialogue-text");
   const choicesEl = document.getElementById("choices");
 
-  // --- 스크립트 데이터 ---
-  // 각 장소별 대사와 선택지
   const scripts = {
     "튜토리얼": [
       { speaker: "박사", text: "드디어....드디어 인류 최고의 발명품을 만들었어요!" },
@@ -288,7 +262,7 @@
     "고물상점": [
       { speaker: null, text: "고물상점에 도착했습니다. 여기서는 부품을 구매할 수 있어요." },
       { choice: true, choices: [
-        { text: "부품 구매 (1000원)", action: "buy", itemId: 2, price: 1000 },
+        { text: "모터 구매 (1000원)", action: "buy", itemId: 2, price: 1000 },
         { text: "돌아간다", action: "exit" }
       ]}
     ],
@@ -296,7 +270,7 @@
     "푸코상점": [
       { speaker: null, text: "푸코상점입니다. 특별한 발명 아이템을 판매합니다." },
       { choice: true, choices: [
-        { text: "특별 아이템 구매 (1500원)", action: "buy", itemId: 3, price: 1500 },
+        { text: "마이크로칩 구매 (1500원)", action: "buy", itemId: 3, price: 1500 },
         { text: "돌아간다", action: "exit" }
       ]}
     ],
@@ -357,15 +331,14 @@
       ]}
     ],
 
-    // 던전 기초
     "던전": [
       { speaker: null, text: "던전에 입장했습니다! 몬스터와 전투를 시작합니다!" },
       { action: "startCombat" }
     ],
   };
 
-  // --- 유틸 함수 ---
-  function updateStats() {
+  // UI 업데이트
+  function updateStats(){
     statHpEl.textContent = `${player.hp}/${player.hpMax}`;
     statAtkEl.textContent = player.atk;
     statMpEl.textContent = player.mp;
@@ -374,7 +347,7 @@
     statTurnEl.textContent = player.turn;
   }
 
-  function renderInventory() {
+  function renderInventory(){
     inventoryList.innerHTML = "";
     if(inventory.length === 0){
       inventoryList.textContent = "아이템이 없습니다.";
@@ -397,17 +370,17 @@
     }
   }
 
-  // --- 대사 출력 + 타이핑 효과 ---
-  function showLine() {
+  // 대사 출력 (타이핑 효과)
+  function showLine(){
     clearInterval(typingTimer);
     const line = currentScript[currentLine];
     if(!line){
-      // 대사가 끝났으면 기본 다음 처리
       showChoices([]);
       return;
     }
-    if(line.action && line.action === "startCombat"){
-      startCombat();
+    if(line.action === "startCombat"){
+      alert("전투 시스템은 아직 미구현입니다.");
+      goToLocation("튜토리얼");
       return;
     }
     speakerEl.textContent = line.speaker || "";
@@ -423,7 +396,6 @@
         if(line.choice){
           showChoices(line.choices);
         } else {
-          // 대사가 끝나면 Enter키로 다음 진행
           document.onkeydown = (e) => {
             if(e.key === "Enter"){
               currentLine++;
@@ -435,22 +407,39 @@
     }, 30);
   }
 
-  // 선택지 표시
-  function showChoices(choices) {
+  function showChoices(choices){
     choicesEl.innerHTML = "";
     if(choices.length === 0){
-      // 대사 끝, 다음 누르면 자동 넘어가게
-      document.onkeydown = (e) => {
-        if(e.key === "Enter"){
-          currentLine++;
-          showLine();
-        }
-      };
+      document.onkeydown = null;
       return;
     }
-
     document.onkeydown = null;
     choices.forEach(choice => {
       const btn = document.createElement("button");
       btn.className = "choice-btn";
       btn.textContent = choice.text;
+      btn.onclick = () => handleChoice(choice);
+      choicesEl.appendChild(btn);
+    });
+  }
+
+  function handleChoice(choice){
+    if(choice.action === "buy"){
+      if(player.money >= choice.price){
+        player.money -= choice.price;
+        let name = "";
+        if(choice.itemId === 2) name = "모터";
+        else if(choice.itemId === 3) name = "마이크로칩";
+        else name = "알수없는 아이템";
+        addItemToInventory(choice.itemId, name, 1);
+        alert(`${name} 을(를) 구매했습니다!`);
+        updateStats();
+        reloadLocation();
+      } else {
+        alert("돈이 부족합니다.");
+      }
+      return;
+    }
+    else if(choice.action === "exercise"){
+      if(player.money >= choice.cost){
+        player.money -= choice
