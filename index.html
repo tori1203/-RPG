@@ -2,161 +2,55 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<title>목박사 RPG 업그레이드</title>
+<title>목박사 RPG 통합 버전</title>
 <style>
+  /* ...이전 스타일 동일 (생략, 필요하면 다시 줌) */
   body {
-    margin: 0; padding: 0;
+    margin:0; padding:0;
     font-family: 'Arial', sans-serif;
     background: linear-gradient(135deg, #222 0%, #111 100%);
     color: white;
     height: 100vh;
     overflow: hidden;
-    background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80');
-    background-size: cover;
-    background-position: center;
   }
   #dialogue-container {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 800px;
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    width: 90%; max-width: 800px;
     background: rgba(0,0,0,0.85);
-    border: 3px solid #555;
-    border-radius: 10px;
-    padding: 15px;
-    box-shadow: 0 0 15px #000;
+    border: 3px solid #555; border-radius: 10px;
+    padding: 15px; box-shadow: 0 0 15px #000;
     z-index: 10;
     min-height: 100px;
   }
-  #speaker {
-    font-weight: bold;
-    color: #ffdd57;
-    margin-bottom: 8px;
-    font-size: 1.3em;
-    min-height: 24px;
-  }
-  #dialogue-text {
-    font-size: 1.1em;
-    white-space: pre-line;
-    min-height: 50px;
-  }
-  #choices {
-    margin-top: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
+  #speaker { font-weight: bold; color: #ffdd57; margin-bottom: 8px; font-size: 1.3em; min-height: 24px; }
+  #dialogue-text { font-size: 1.1em; white-space: pre-line; min-height: 50px; }
+  #choices { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 10px; }
   .choice-btn {
-    background-color: #444;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 5px;
-    color: white;
-    cursor: pointer;
-    flex: 1 1 auto;
-    min-width: 100px;
+    background-color: #444; border: none; padding: 10px 18px; border-radius: 5px;
+    color: white; cursor: pointer; flex: 1 1 auto; min-width: 100px;
     transition: background-color 0.3s ease;
   }
-  .choice-btn:hover {
-    background-color: #666;
+  .choice-btn:hover { background-color: #666; }
+  #inventory-btn { position: fixed; top: 20px; right: 20px; background: #333; border: 2px solid #777; border-radius: 8px;
+    color: white; padding: 12px 18px; cursor: pointer; font-weight: bold; z-index: 20; user-select: none;
   }
-  #inventory-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #333;
-    border: 2px solid #777;
-    border-radius: 8px;
-    color: white;
-    padding: 12px 18px;
-    cursor: pointer;
-    font-weight: bold;
-    z-index: 20;
-    user-select: none;
+  #stat-panel { position: fixed; top: 20px; left: 20px; background: rgba(20,20,20,0.85); border: 2px solid #555; border-radius: 10px;
+    padding: 12px 20px; width: 220px; font-size: 1em; line-height: 1.5em; z-index: 20;
   }
-  #stat-panel {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    background: rgba(20,20,20,0.85);
-    border: 2px solid #555;
-    border-radius: 10px;
-    padding: 12px 20px;
-    width: 220px;
-    font-size: 1em;
-    line-height: 1.5em;
-    z-index: 20;
+  #location-btn { position: fixed; bottom: 20px; left: 20px; background: #222; border: 2px solid #666; border-radius: 8px;
+    padding: 12px 18px; color: white; cursor: pointer; font-weight: bold; z-index: 20; user-select: none;
   }
-  #location-btn {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    background: #222;
-    border: 2px solid #666;
-    border-radius: 8px;
-    padding: 12px 18px;
-    color: white;
-    cursor: pointer;
-    font-weight: bold;
-    z-index: 20;
-    user-select: none;
+  .popup { position: fixed; background: rgba(0,0,0,0.9); border: 3px solid #555; border-radius: 10px; padding: 15px;
+    max-width: 320px; color: white; box-shadow: 0 0 20px #000; z-index: 30;
   }
-  .popup {
-    position: fixed;
-    background: rgba(0,0,0,0.9);
-    border: 3px solid #555;
-    border-radius: 10px;
-    padding: 15px;
-    max-width: 320px;
-    color: white;
-    box-shadow: 0 0 20px #000;
-    z-index: 30;
-  }
-  #inventory-popup, #location-popup {
-    display: none;
-  }
-  #inventory-popup {
-    top: 60px;
-    right: 20px;
-    width: 320px;
-    max-height: 70vh;
-    overflow-y: auto;
-  }
-  #location-popup {
-    bottom: 70px;
-    left: 20px;
-  }
-  .popup h3 {
-    margin-top: 0;
-  }
-  .popup-close-btn {
-    background: #444;
-    border: none;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    float: right;
-  }
-  .item {
-    border: 1px solid #666;
-    padding: 5px 8px;
-    margin-bottom: 6px;
-    border-radius: 5px;
-  }
-  .location-item {
-    cursor: pointer;
-    padding: 6px 10px;
-    border-radius: 5px;
-    border: 1px solid transparent;
-    transition: border-color 0.2s ease;
-  }
-  .location-item:hover {
-    border-color: #ffdd57;
-    background-color: rgba(255, 221, 87, 0.1);
-  }
+  #inventory-popup, #location-popup { display: none; }
+  #inventory-popup { top: 60px; right: 20px; width: 320px; max-height: 70vh; overflow-y: auto; }
+  #location-popup { bottom: 70px; left: 20px; }
+  .popup h3 { margin-top: 0; }
+  .popup-close-btn { background: #444; border: none; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; float: right; }
+  .item { border: 1px solid #666; padding: 5px 8px; margin-bottom: 6px; border-radius: 5px; }
+  .location-item { cursor: pointer; padding: 6px 10px; border-radius: 5px; border: 1px solid transparent; transition: border-color 0.2s ease; }
+  .location-item:hover { border-color: #ffdd57; background-color: rgba(255, 221, 87, 0.1); }
 </style>
 </head>
 <body>
@@ -246,7 +140,7 @@
   const dialogueTextEl = document.getElementById("dialogue-text");
   const choicesEl = document.getElementById("choices");
 
-  // 장소별 스크립트
+  // 스크립트 (대사와 선택지)
   const scripts = {
     "튜토리얼": [
       { speaker: "박사", text: "드디어....드디어 인류 최고의 발명품을 만들었어요!" },
@@ -278,89 +172,79 @@
     "고물상점": [
       { speaker: null, text: "고물상점에 도착했습니다. 여기서는 고철과 부품을 살 수 있어요." },
       { choice: true, choices: [
-        { text: "부품 구매 (1000원)", next: 2 },
-        { text: "돌아간다", next: 99 }
-      ]},
-      { speaker: "상인", text: "감사합니다! 좋은 부품입니다." }
+        { text: "부품 구매 (1000원)", action: "buy", itemId: 2, price: 1000 },
+        { text: "돌아간다", action: "exit" }
+      ]}
     ],
 
     "푸코상점": [
       { speaker: null, text: "푸코상점입니다. 특별한 발명 아이템이 있습니다." },
       { choice: true, choices: [
-        { text: "아이템 구경하기 (1500원)", next: 2 },
-        { text: "돌아간다", next: 99 }
-      ]},
-      { speaker: "푸코", text: "최고의 아이템을 가져왔어요!" }
+        { text: "아이템 구경하기 (1500원)", action: "buy", itemId: 3, price: 1500 },
+        { text: "돌아간다", action: "exit" }
+      ]}
     ],
 
     "헬스장": [
       { speaker: null, text: "헬스장에 왔습니다. 체력을 키울 수 있어요. 운동 비용 2000원." },
       { choice: true, choices: [
-        { text: "운동한다 (2000원)", next: 2 },
-        { text: "돌아간다", next: 99 }
-      ]},
-      { speaker: "트레이너", text: "잘했어요! 체력이 10 증가했습니다." }
+        { text: "운동한다 (2000원)", action: "exercise", cost: 2000 },
+        { text: "돌아간다", action: "exit" }
+      ]}
     ],
 
     "도서관": [
       { speaker: null, text: "도서관입니다. 새로운 지식을 얻을 수 있어요. 독서 비용 2000원." },
       { choice: true, choices: [
-        { text: "책을 읽는다 (2000원)", next: 2 },
-        { text: "돌아간다", next: 99 }
-      ]},
-      { speaker: "사서", text: "좋은 책을 발견했습니다!" }
+        { text: "책을 읽는다 (2000원)", action: "read", cost: 2000 },
+        { text: "돌아간다", action: "exit" }
+      ]}
     ],
 
+    // 이하 장소들은 단순 대사만...
     "도박장": [
       { speaker: null, text: "도박장에 왔습니다. 운을 시험해보세요!" },
       { choice: true, choices: [
-        { text: "슬롯머신 돌리기 (500원)", next: 2 },
-        { text: "돌아간다", next: 99 }
-      ]},
-      { speaker: "딜러", text: "결과는 운에 맡기죠!" }
+        { text: "슬롯머신 돌리기 (500원)", action: "gamble", cost: 500 },
+        { text: "돌아간다", action: "exit" }
+      ]}
     ],
 
     "과학실": [
       { speaker: null, text: "과학실입니다. 발명품 연구를 할 수 있어요." },
       { choice: true, choices: [
-        { text: "연구한다 (3000원)", next: 2 },
-        { text: "돌아간다", next: 99 }
-      ]},
-      { speaker: "과학자", text: "흥미로운 결과가 나왔어요!" }
+        { text: "연구한다 (3000원)", action: "research", cost: 3000 },
+        { text: "돌아간다", action: "exit" }
+      ]}
     ],
 
     "제련소": [
       { speaker: null, text: "제련소입니다. 아이템을 강화할 수 있어요." },
       { choice: true, choices: [
-        { text: "강화 시도 (2500원)", next: 2 },
-        { text: "돌아간다", next: 99 }
-      ]},
-      { speaker: "대장장이", text: "강화 성공! 힘이 더해졌어요." }
+        { text: "강화 시도 (2500원)", action: "forge", cost: 2500 },
+        { text: "돌아간다", action: "exit" }
+      ]}
     ],
 
     "정보거래소": [
       { speaker: null, text: "정보거래소입니다. 새로운 정보를 얻을 수 있어요." },
       { choice: true, choices: [
-        { text: "정보 구입 (2000원)", next: 2 },
-        { text: "돌아간다", next: 99 }
-      ]},
-      { speaker: "정보상", text: "유용한 정보를 입수했습니다!" }
+        { text: "정보 구입 (2000원)", action: "info", cost: 2000 },
+        { text: "돌아간다", action: "exit" }
+      ]}
     ],
 
     "판매소": [
       { speaker: null, text: "판매소입니다. 아이템을 팔 수 있어요." },
       { choice: true, choices: [
-        { text: "아이템 판매", next: 2 },
-        { text: "돌아간다", next: 99 }
-      ]},
-      { speaker: "판매상", text: "감사합니다! 좋은 거래였어요." }
+        { text: "아이템 판매", action: "sell" },
+        { text: "돌아간다", action: "exit" }
+      ]}
     ],
   };
 
   let currentScript = scripts[currentLocation];
   let currentLine = 0;
-
-  // 타이핑 효과를 위한 변수들
   let typingIndex = 0;
   let typingTimer;
 
@@ -373,17 +257,9 @@
     statTurnEl.textContent = playerStats.turn;
   }
 
-  // 인벤토리 UI
-  inventoryBtn.onclick = () => {
-    renderInventory();
-    inventoryPopup.style.display = "block";
-  };
-  invCloseBtn.onclick = () => {
-    inventoryPopup.style.display = "none";
-  };
   function renderInventory() {
     inventoryList.innerHTML = "";
-    if (inventory.length === 0) {
+    if(inventory.length === 0){
       inventoryList.textContent = "아이템이 없습니다.";
       return;
     }
@@ -395,5 +271,19 @@
     });
   }
 
-  // 장소 이동 UI
-  locationBtn.onclick = ()
+  inventoryBtn.onclick = () => {
+    renderInventory();
+    inventoryPopup.style.display = "block";
+  };
+  invCloseBtn.onclick = () => {
+    inventoryPopup.style.display = "none";
+  };
+
+  locationBtn.onclick = () => {
+    locationList.innerHTML = "";
+    locations.forEach(loc => {
+      if(loc === currentLocation) return;
+      const div = document.createElement("div");
+      div.className = "location-item";
+      div.textContent = loc;
+      div.onclick = () => loadLocation
