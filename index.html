@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>목박사 RPG - 장소 시스템</title>
+<title>목박사 RPG - 장소 시스템 재확인</title>
 <style>
   body {
     background: #111;
@@ -52,6 +52,7 @@
     border-radius: 8px;
     cursor: pointer;
     font-size: 16px;
+    z-index: 101;
   }
   #locationList {
     position: fixed;
@@ -61,8 +62,8 @@
     border-radius: 8px;
     padding: 10px;
     max-width: 300px;
-    display: none;
     box-shadow: 0 0 15px #000;
+    display: none;
     z-index: 100;
   }
   #locationList button {
@@ -102,7 +103,6 @@
   let currentScript = [];
   let currentLocation = "튜토리얼";
 
-  // 장소별 스크립트
   const locationScripts = {
     "튜토리얼": [
       { speaker: "박사", text: "튜토리얼 장소에 왔습니다." },
@@ -113,7 +113,6 @@
         { text: "헬스장으로 이동", nextLocation: "헬스장" }
       ]},
     ],
-
     "고물상점": [
       { speaker: null, text: "고물상점에 도착했습니다. 부품을 구매할 수 있습니다." },
       { speaker: null, text: "하지만 아직 구매 시스템은 없어요.", choices: [
@@ -121,7 +120,6 @@
         { text: "헬스장으로 이동", nextLocation: "헬스장" }
       ]}
     ],
-
     "헬스장": [
       { speaker: null, text: "헬스장에 왔습니다. 운동하면 체력이 늘어납니다." },
       { speaker: null, text: "운동은 아직 미구현 상태입니다.", choices: [
@@ -137,7 +135,6 @@
 
   function showLine(){
     if(currentLine >= currentScript.length){
-      // 대사가 끝났으면 선택지 없으면 기본 선택지 띄우기
       dialogueDiv.textContent = "";
       choicesDiv.innerHTML = "";
       return;
@@ -201,7 +198,6 @@
     locationList.style.display = "block";
   };
 
-  // 초기화
   goToLocation("튜토리얼");
 })();
 </script>
