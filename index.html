@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>목박사 RPG</title>
+    <style>
+        body {
+            font-family: monospace;
+            background-color: #111;
+            color: #0f0;
+            padding: 20px;
+        }
+        #game {
+            white-space: pre-wrap;
+            background-color: #000;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #0f0;
+            min-height: 300px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 5px 10px;
+            font-size: 14px;
+            background-color: #0f0;
+            color: #000;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #8f8;
+        }
+    </style>
+</head>
+<body>
+    <h1>목박사 RPG</h1>
+    <div id="game"></div>
+    <button onclick="next()">다음</button>
+
+    <script>
+        // 간단한 목박사 RPG 예시 데이터
+        let step = 0;
+        const story = [
+            "당신은 목박사 연구실 앞에 서 있다...",
+            "문이 삐걱 열리며 이상한 기계음이 들린다.",
+            "목박사: '오, 드디어 왔군... 실험을 도와줄 시간이다!'",
+            "연구실 안으로 들어섰다..."
+        ];
+
+        function next() {
+            if (step < story.length) {
+                document.getElementById('game').innerText += story[step] + "\n";
+                step++;
+            } else {
+                document.getElementById('game').innerText += "\n[게임 끝]";
+            }
+        }
+
+        // 첫 장면 출력
+        next();
+    </script>
+</body>
+</html>
