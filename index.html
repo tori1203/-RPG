@@ -130,3 +130,324 @@ showDialogue();
 
 </body>
 </html>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>목박사 RPG UI</title>
+<style>
+  body {
+    margin: 0; padding: 0;
+    font-family: 'Arial', sans-serif;
+    background-color: #111;
+    color: white;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* 대사창 + 선택지 - 중앙 아래 */
+  #dialogue-container {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 800px;
+    background: rgba(0,0,0,0.85);
+    border: 3px solid #555;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 0 15px #000;
+    z-index: 10;
+  }
+  #speaker {
+    font-weight: bold;
+    color: #ffdd57;
+    margin-bottom: 8px;
+    font-size: 1.2em;
+  }
+  #dialogue-text {
+    font-size: 1.1em;
+    min-height: 60px;
+    white-space: pre-line;
+  }
+  #choices {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .choice-btn {
+    background-color: #444;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    flex: 1 1 auto;
+    min-width: 100px;
+    transition: background-color 0.3s ease;
+  }
+  .choice-btn:hover {
+    background-color: #666;
+  }
+
+  /* 인벤토리 버튼 - 오른쪽 구석 */
+  #inventory-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #333;
+    border: 2px solid #777;
+    border-radius: 8px;
+    color: white;
+    padding: 12px 18px;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 20;
+    user-select: none;
+  }
+
+  /* 스탯창 - 왼쪽 위 */
+  #stat-panel {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: rgba(20,20,20,0.9);
+    border: 2px solid #555;
+    border-radius: 10px;
+    padding: 12px 20px;
+    width: 180px;
+    font-size: 1em;
+    line-height: 1.5em;
+    z-index: 20;
+  }
+
+  /* 장소 이동 버튼 - 왼쪽 구석 아래 */
+  #location-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: #222;
+    border: 2px solid #666;
+    border-radius: 8px;
+    padding: 12px 18px;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 20;
+    user-select: none;
+  }
+
+  /* 팝업 공통 스타일 */
+  .popup {
+    position: fixed;
+    background: rgba(0,0,0,0.9);
+    border: 3px solid #555;
+    border-radius: 10px;
+    padding: 15px;
+    max-width: 300px;
+    color: white;
+    box-shadow: 0 0 20px #000;
+    z-index: 30;
+  }
+  #inventory-popup, #location-popup {
+    display: none;
+  }
+  #inventory-popup {
+    top: 60px;
+    right: 20px;
+    width: 320px;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  #location-popup {
+    bottom: 70px;
+    left: 20px;
+  }
+  .popup h3 {
+    margin-top: 0;
+  }
+  .popup-close-btn {
+    background: #444;
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    float: right;
+  }
+  .item {
+    border: 1px solid #666;
+    padding: 5px 8px;
+    margin-bottom: 6px;
+    border-radius: 5px;
+  }
+  .location-item {
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    transition: border-color 0.2s ease;
+  }
+  .location-item:hover {
+    border-color: #ffdd57;
+    background-color: rgba(255, 221, 87, 0.1);
+  }
+</style>
+</head>
+<body>
+
+<!-- 스탯창 -->
+<div id="stat-panel">
+  <div>체력: <span id="stat-hp">100</span></div>
+  <div>공격력: <span id="stat-atk">10</span></div>
+  <div>마나: <span id="stat-mp">30</span></div>
+  <div>치명타 확률: <span id="stat-crit">5%</span></div>
+</div>
+
+<!-- 인벤토리 버튼 -->
+<div id="inventory-btn">인벤토리</div>
+
+<!-- 장소 이동 버튼 -->
+<div id="location-btn">장소 이동</div>
+
+<!-- 대사창 + 선택지 -->
+<div id="dialogue-container">
+  <div id="speaker"></div>
+  <div id="dialogue-text"></div>
+  <div id="choices"></div>
+</div>
+
+<!-- 인벤토리 팝업 -->
+<div id="inventory-popup" class="popup">
+  <button class="popup-close-btn" id="inv-close-btn">닫기</button>
+  <h3>인벤토리</h3>
+  <div id="inventory-list">
+    <!-- 아이템 목록 -->
+  </div>
+</div>
+
+<!-- 장소 이동 팝업 -->
+<div id="location-popup" class="popup">
+  <button class="popup-close-btn" id="loc-close-btn">닫기</button>
+  <h3>장소 선택</h3>
+  <div id="location-list">
+    <!-- 장소 목록 -->
+  </div>
+</div>
+
+<script>
+  // 기본 스탯 예시
+  const playerStats = {
+    hp: 100,
+    atk: 10,
+    mp: 30,
+    crit: 5
+  };
+
+  // 기본 인벤토리 예시
+  let inventory = [
+    { id: 1, name: "망가진 팔", qty: 1 },
+    { id: 2, name: "모터", qty: 2 },
+    { id: 3, name: "마이크로칩", qty: 3 }
+  ];
+
+  // 장소 목록 예시
+  const locations = [
+    "작업실",
+    "쓰레기 고물가게",
+    "대장간",
+    "상점"
+  ];
+
+  // 현재 장소
+  let currentLocation = "작업실";
+
+  // UI 엘리먼트
+  const statHpEl = document.getElementById("stat-hp");
+  const statAtkEl = document.getElementById("stat-atk");
+  const statMpEl = document.getElementById("stat-mp");
+  const statCritEl = document.getElementById("stat-crit");
+
+  const inventoryBtn = document.getElementById("inventory-btn");
+  const inventoryPopup = document.getElementById("inventory-popup");
+  const invCloseBtn = document.getElementById("inv-close-btn");
+  const inventoryList = document.getElementById("inventory-list");
+
+  const locationBtn = document.getElementById("location-btn");
+  const locationPopup = document.getElementById("location-popup");
+  const locCloseBtn = document.getElementById("loc-close-btn");
+  const locationList = document.getElementById("location-list");
+
+  const speakerEl = document.getElementById("speaker");
+  const dialogueTextEl = document.getElementById("dialogue-text");
+  const choicesEl = document.getElementById("choices");
+
+  // 스탯 표시 함수
+  function updateStats() {
+    statHpEl.textContent = playerStats.hp;
+    statAtkEl.textContent = playerStats.atk;
+    statMpEl.textContent = playerStats.mp;
+    statCritEl.textContent = playerStats.crit + "%";
+  }
+
+  // 인벤토리 열기/닫기
+  inventoryBtn.addEventListener("click", () => {
+    renderInventory();
+    inventoryPopup.style.display = "block";
+  });
+  invCloseBtn.addEventListener("click", () => {
+    inventoryPopup.style.display = "none";
+  });
+
+  // 인벤토리 렌더링
+  function renderInventory() {
+    inventoryList.innerHTML = "";
+    if(inventory.length === 0){
+      inventoryList.textContent = "아이템이 없습니다.";
+      return;
+    }
+    inventory.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "item";
+      div.textContent = `${item.name} ×${item.qty}`;
+      inventoryList.appendChild(div);
+    });
+  }
+
+  // 장소 이동 열기/닫기
+  locationBtn.addEventListener("click", () => {
+    renderLocations();
+    locationPopup.style.display = "block";
+  });
+  locCloseBtn.addEventListener("click", () => {
+    locationPopup.style.display = "none";
+  });
+
+  // 장소 목록 렌더링
+  function renderLocations() {
+    locationList.innerHTML = "";
+    locations.forEach(loc => {
+      const div = document.createElement("div");
+      div.className = "location-item";
+      div.textContent = loc;
+      div.addEventListener("click", () => {
+        currentLocation = loc;
+        locationPopup.style.display = "none";
+        alert(`${loc} 으로 이동했습니다!`);
+        // TODO: 장소 이동에 따른 스토리/이벤트 처리 추가 예정
+      });
+      locationList.appendChild(div);
+    });
+  }
+
+  // 초기 세팅
+  updateStats();
+
+  // TODO: 대사창, 선택지 UI 기능 추가 예정
+</script>
+
+</body>
+</html>
