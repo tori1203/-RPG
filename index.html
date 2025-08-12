@@ -1,142 +1,10 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<title>목박사 스토리</title>
-<style>
-  body {
-    font-family: 'Arial', sans-serif;
-    background-color: #111;
-    color: white;
-    margin: 0;
-    padding: 0;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-  }
-
-  #dialogue-box {
-    width: 90%;
-    max-width: 800px;
-    background-color: rgba(0, 0, 0, 0.85);
-    border: 3px solid #555;
-    border-radius: 10px;
-    padding: 15px;
-    margin-bottom: 30px;
-    box-shadow: 0 0 15px #000;
-  }
-
-  #speaker {
-    font-weight: bold;
-    color: #ffdd57;
-    margin-bottom: 10px;
-    font-size: 1.2em;
-  }
-
-  #text {
-    font-size: 1.1em;
-    min-height: 60px;
-    white-space: pre-line;
-  }
-
-  #hint {
-    font-size: 0.9em;
-    color: #aaa;
-    margin-top: 10px;
-    text-align: right;
-  }
-</style>
-</head>
-<body>
-
-<div id="dialogue-box">
-  <div id="speaker"></div>
-  <div id="text"></div>
-  <div id="hint">[엔터] 다음</div>
-</div>
-
-<script>
-const dialogues = [
-  { speaker: "박사", text: "드디어....드디어 인류 최고의 발명품을 만들었어요!" },
-  { speaker: "조수", text: "그게 뭔데요 박사님?" },
-  { speaker: "박사", text: "내 모모짱을 닮은 무드등" },
-  { speaker: "조수", text: "아니 그걸 누가써요;;" },
-  { speaker: "박사", text: "...아 그런가?" },
-  { speaker: "조수", text: "하....저도이제 지겹다고요!! 언제까지 그렇게 하실거에요!!!" },
-  { speaker: "박사", text: "내가 미안하다 광칠아..." },
-  { speaker: "조수", text: "하...저도 이젠 더이상 못해요! 전 갈꺼에요" },
-  { speaker: "박사", text: "아니 나에게 1개월, 아니 1주일만 시간을 주게!!!" },
-  { speaker: "조수", text: "늦었어요, 이거나 받고 꺼지세요" },
-  { speaker: null, text: "(만원 한장을 주고 작업실을 떠난 조수....)" },
-  { speaker: "박사", text: "이젠 진짜 혼자가 됐어......." },
-  { speaker: "박사", text: "안돼겠어! 나 목박사 꼭 우주최강 박사가 될 태다!!!" }
-];
-
-let currentIndex = 0;
-const speakerEl = document.getElementById("speaker");
-const textEl = document.getElementById("text");
-
-let typingInterval;
-let isTyping = false;
-
-function typeText(fullText, callback) {
-  let i = 0;
-  isTyping = true;
-  textEl.textContent = "";
-  typingInterval = setInterval(() => {
-    textEl.textContent += fullText[i];
-    i++;
-    if (i >= fullText.length) {
-      clearInterval(typingInterval);
-      isTyping = false;
-      if (callback) callback();
-    }
-  }, 30); // 타자 속도 (ms)
-}
-
-function showDialogue() {
-  if (isTyping) {
-    // 타이핑 중이면 바로 끝까지 출력
-    clearInterval(typingInterval);
-    const line = dialogues[currentIndex - 1];
-    textEl.textContent = line.text;
-    isTyping = false;
-    return;
-  }
-
-  if (currentIndex >= dialogues.length) {
-    speakerEl.textContent = "";
-    textEl.textContent = "스토리 종료.";
-    return;
-  }
-
-  const line = dialogues[currentIndex];
-  speakerEl.textContent = line.speaker || "";
-  typeText(line.text);
-  currentIndex++;
-}
-
-// 엔터 키로 대사 진행
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    showDialogue();
-  }
-});
-
-// 첫 대사 표시
-showDialogue();
-</script>
-
-</body>
-</html>
-
-<!DOCTYPE html>
-<html lang="ko">
-<head>
 <meta charset="UTF-8" />
-<title>목박사 RPG UI</title>
+<title>목박사 RPG 튜토리얼</title>
 <style>
+  /* 기존 스타일 그대로 유지 */
   body {
     margin: 0; padding: 0;
     font-family: 'Arial', sans-serif;
@@ -145,8 +13,6 @@ showDialogue();
     height: 100vh;
     overflow: hidden;
   }
-
-  /* 대사창 + 선택지 - 중앙 아래 */
   #dialogue-container {
     position: fixed;
     bottom: 20px;
@@ -192,8 +58,6 @@ showDialogue();
   .choice-btn:hover {
     background-color: #666;
   }
-
-  /* 인벤토리 버튼 - 오른쪽 구석 */
   #inventory-btn {
     position: fixed;
     top: 20px;
@@ -208,8 +72,6 @@ showDialogue();
     z-index: 20;
     user-select: none;
   }
-
-  /* 스탯창 - 왼쪽 위 */
   #stat-panel {
     position: fixed;
     top: 20px;
@@ -223,8 +85,6 @@ showDialogue();
     line-height: 1.5em;
     z-index: 20;
   }
-
-  /* 장소 이동 버튼 - 왼쪽 구석 아래 */
   #location-btn {
     position: fixed;
     bottom: 20px;
@@ -239,8 +99,6 @@ showDialogue();
     z-index: 20;
     user-select: none;
   }
-
-  /* 팝업 공통 스타일 */
   .popup {
     position: fixed;
     background: rgba(0,0,0,0.9);
@@ -299,7 +157,6 @@ showDialogue();
 </head>
 <body>
 
-<!-- 스탯창 -->
 <div id="stat-panel">
   <div>체력: <span id="stat-hp">100</span></div>
   <div>공격력: <span id="stat-atk">10</span></div>
@@ -307,85 +164,82 @@ showDialogue();
   <div>치명타 확률: <span id="stat-crit">5%</span></div>
 </div>
 
-<!-- 인벤토리 버튼 -->
 <div id="inventory-btn">인벤토리</div>
-
-<!-- 장소 이동 버튼 -->
 <div id="location-btn">장소 이동</div>
 
-<!-- 대사창 + 선택지 -->
 <div id="dialogue-container">
   <div id="speaker"></div>
   <div id="dialogue-text"></div>
   <div id="choices"></div>
 </div>
 
-<!-- 인벤토리 팝업 -->
 <div id="inventory-popup" class="popup">
   <button class="popup-close-btn" id="inv-close-btn">닫기</button>
   <h3>인벤토리</h3>
-  <div id="inventory-list">
-    <!-- 아이템 목록 -->
-  </div>
+  <div id="inventory-list"></div>
 </div>
 
-<!-- 장소 이동 팝업 -->
 <div id="location-popup" class="popup">
   <button class="popup-close-btn" id="loc-close-btn">닫기</button>
   <h3>장소 선택</h3>
-  <div id="location-list">
-    <!-- 장소 목록 -->
-  </div>
+  <div id="location-list"></div>
 </div>
 
 <script>
-  // 기본 스탯 예시
-  const playerStats = {
-    hp: 100,
-    atk: 10,
-    mp: 30,
-    crit: 5
-  };
-
-  // 기본 인벤토리 예시
+  // 기본 스탯
+  const playerStats = { hp: 100, atk: 10, mp: 30, crit: 5 };
   let inventory = [
     { id: 1, name: "망가진 팔", qty: 1 },
     { id: 2, name: "모터", qty: 2 },
     { id: 3, name: "마이크로칩", qty: 3 }
   ];
-
-  // 장소 목록 예시
-  const locations = [
-    "작업실",
-    "쓰레기 고물가게",
-    "대장간",
-    "상점"
-  ];
-
-  // 현재 장소
+  const locations = ["작업실", "쓰레기 고물가게", "대장간", "상점"];
   let currentLocation = "작업실";
 
-  // UI 엘리먼트
+  // UI 요소들
   const statHpEl = document.getElementById("stat-hp");
   const statAtkEl = document.getElementById("stat-atk");
   const statMpEl = document.getElementById("stat-mp");
   const statCritEl = document.getElementById("stat-crit");
-
   const inventoryBtn = document.getElementById("inventory-btn");
   const inventoryPopup = document.getElementById("inventory-popup");
   const invCloseBtn = document.getElementById("inv-close-btn");
   const inventoryList = document.getElementById("inventory-list");
-
   const locationBtn = document.getElementById("location-btn");
   const locationPopup = document.getElementById("location-popup");
   const locCloseBtn = document.getElementById("loc-close-btn");
   const locationList = document.getElementById("location-list");
-
   const speakerEl = document.getElementById("speaker");
   const dialogueTextEl = document.getElementById("dialogue-text");
   const choicesEl = document.getElementById("choices");
 
-  // 스탯 표시 함수
+  // 대사 및 선택지 데이터
+  const script = [
+    { speaker: "박사", text: "드디어....드디어 인류 최고의 발명품을 만들었어요!" },
+    { speaker: "조수", text: "그게 뭔데요 박사님?" },
+    { speaker: "박사", text: "내 모모짱을 닮은 무드등" },
+    { speaker: "조수", text: "아니 그걸 누가써요;;" },
+    { speaker: "박사", text: "...아 그런가?" },
+    { speaker: "조수", text: "하....저도 이제 지겹다고요!! 언제까지 그렇게 하실거에요!!!" },
+    { speaker: "박사", text: "내가 미안하다 광칠아..." },
+    { speaker: "조수", text: "하...저도 이젠 더이상 못해요! 전 갈꺼에요" },
+    { speaker: "박사", text: "아니 나에게 1개월, 아니 1주일만 시간을 주게!!!" },
+    { speaker: "조수", text: "늦었어요, 이거나 받고 꺼지세요" },
+    { speaker: null, text: "(만원 한장을 주고 작업실을 떠난 조수....)" },
+    { speaker: "박사", text: "이젠 진짜 혼자가 됐어......." },
+    { speaker: "박사", text: "안돼겠어! 나 목박사 꼭 우주최강 박사가 될 태다!!!" },
+    // 선택지 예시
+    { choice: true, choices: [
+      { text: "목박사에게 계속 힘을 불어넣는다", next: 14 },
+      { text: "포기하고 쉬기로 한다", next: 99 }
+    ]},
+    { speaker: "박사", text: "그래, 나는 반드시 해낼 거야!" },
+    // ... 이후 스토리 계속
+  ];
+
+  let currentLine = 0;
+
+  // 스탯 업데이트
   function updateStats() {
     statHpEl.textContent = playerStats.hp;
     statAtkEl.textContent = playerStats.atk;
@@ -393,19 +247,17 @@ showDialogue();
     statCritEl.textContent = playerStats.crit + "%";
   }
 
-  // 인벤토리 열기/닫기
-  inventoryBtn.addEventListener("click", () => {
+  // 인벤토리 팝업 열기/닫기
+  inventoryBtn.onclick = () => {
     renderInventory();
     inventoryPopup.style.display = "block";
-  });
-  invCloseBtn.addEventListener("click", () => {
+  };
+  invCloseBtn.onclick = () => {
     inventoryPopup.style.display = "none";
-  });
-
-  // 인벤토리 렌더링
+  };
   function renderInventory() {
     inventoryList.innerHTML = "";
-    if(inventory.length === 0){
+    if(inventory.length === 0) {
       inventoryList.textContent = "아이템이 없습니다.";
       return;
     }
@@ -417,36 +269,74 @@ showDialogue();
     });
   }
 
-  // 장소 이동 열기/닫기
-  locationBtn.addEventListener("click", () => {
+  // 장소 이동 팝업 열기/닫기
+  locationBtn.onclick = () => {
     renderLocations();
     locationPopup.style.display = "block";
-  });
-  locCloseBtn.addEventListener("click", () => {
+  };
+  locCloseBtn.onclick = () => {
     locationPopup.style.display = "none";
-  });
-
-  // 장소 목록 렌더링
+  };
   function renderLocations() {
     locationList.innerHTML = "";
     locations.forEach(loc => {
       const div = document.createElement("div");
       div.className = "location-item";
       div.textContent = loc;
-      div.addEventListener("click", () => {
+      div.onclick = () => {
         currentLocation = loc;
         locationPopup.style.display = "none";
         alert(`${loc} 으로 이동했습니다!`);
-        // TODO: 장소 이동에 따른 스토리/이벤트 처리 추가 예정
-      });
+        // TODO: 장소 이동 시 이벤트 처리 넣기
+      };
       locationList.appendChild(div);
     });
   }
 
-  // 초기 세팅
-  updateStats();
+  // 대사 출력 함수
+  function showLine() {
+    clearChoices();
+    const line = script[currentLine];
+    if (!line) return;
+    if(line.choice) {
+      showChoices(line.choices);
+      return;
+    }
+    speakerEl.textContent = line.speaker ? line.speaker : "";
+    dialogueTextEl.textContent = line.text;
+  }
 
-  // TODO: 대사창, 선택지 UI 기능 추가 예정
+  // 선택지 렌더링
+  function showChoices(choices) {
+    choicesEl.innerHTML = "";
+    choices.forEach(choice => {
+      const btn = document.createElement("button");
+      btn.className = "choice-btn";
+      btn.textContent = choice.text;
+      btn.onclick = () => {
+        currentLine = choice.next;
+        showLine();
+      };
+      choicesEl.appendChild(btn);
+    });
+  }
+  function clearChoices() {
+    choicesEl.innerHTML = "";
+  }
+
+  // 엔터키로 대사 진행
+  window.addEventListener("keydown", (e) => {
+    if(e.key === "Enter") {
+      if(choicesEl.childElementCount === 0) {
+        currentLine++;
+        showLine();
+      }
+    }
+  });
+
+  updateStats();
+  showLine();
+
 </script>
 
 </body>
