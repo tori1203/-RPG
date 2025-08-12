@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>목박사 RPG - 장소 시스템 재확인</title>
+<title>목박사 RPG - 전체 장소 추가</title>
 <style>
   body {
     background: #111;
@@ -117,14 +117,65 @@
       { speaker: null, text: "고물상점에 도착했습니다. 부품을 구매할 수 있습니다." },
       { speaker: null, text: "하지만 아직 구매 시스템은 없어요.", choices: [
         { text: "튜토리얼로 돌아가기", nextLocation: "튜토리얼" },
-        { text: "헬스장으로 이동", nextLocation: "헬스장" }
+        { text: "헬스장으로 이동", nextLocation: "헬스장" },
+        { text: "푸코상점으로 이동", nextLocation: "푸코상점" }
       ]}
     ],
     "헬스장": [
       { speaker: null, text: "헬스장에 왔습니다. 운동하면 체력이 늘어납니다." },
       { speaker: null, text: "운동은 아직 미구현 상태입니다.", choices: [
         { text: "튜토리얼로 돌아가기", nextLocation: "튜토리얼" },
-        { text: "고물상점으로 이동", nextLocation: "고물상점" }
+        { text: "고물상점으로 이동", nextLocation: "고물상점" },
+        { text: "도서관으로 이동", nextLocation: "도서관" }
+      ]}
+    ],
+    "푸코상점": [
+      { speaker: null, text: "푸코상점에 도착했습니다. 다양한 아이템을 판매합니다." },
+      { speaker: null, text: "구매 기능은 추후 추가 예정입니다.", choices: [
+        { text: "고물상점으로 이동", nextLocation: "고물상점" },
+        { text: "도박장으로 이동", nextLocation: "도박장" }
+      ]}
+    ],
+    "도서관": [
+      { speaker: null, text: "도서관에 왔습니다. 지식을 쌓을 수 있습니다." },
+      { speaker: null, text: "독서는 체력과 마나 회복에 도움을 줍니다.", choices: [
+        { text: "헬스장으로 이동", nextLocation: "헬스장" },
+        { text: "과학실로 이동", nextLocation: "과학실" }
+      ]}
+    ],
+    "도박장": [
+      { speaker: null, text: "도박장에 왔습니다. 운을 시험해보세요!" },
+      { speaker: null, text: "도박은 리스크가 큽니다.", choices: [
+        { text: "푸코상점으로 이동", nextLocation: "푸코상점" },
+        { text: "제련소로 이동", nextLocation: "제련소" }
+      ]}
+    ],
+    "과학실": [
+      { speaker: null, text: "과학실에 도착했습니다. 새로운 기술을 연구할 수 있습니다." },
+      { speaker: null, text: "연구는 추후 구현 예정입니다.", choices: [
+        { text: "도서관으로 이동", nextLocation: "도서관" },
+        { text: "정보거래소로 이동", nextLocation: "정보거래소" }
+      ]}
+    ],
+    "제련소": [
+      { speaker: null, text: "제련소에 왔습니다. 무기를 강화할 수 있습니다." },
+      { speaker: null, text: "강화 시스템은 아직 미완성입니다.", choices: [
+        { text: "도박장으로 이동", nextLocation: "도박장" },
+        { text: "판매소로 이동", nextLocation: "판매소" }
+      ]}
+    ],
+    "정보거래소": [
+      { speaker: null, text: "정보거래소에 왔습니다. 다양한 정보를 거래합니다." },
+      { speaker: null, text: "정보 거래 기능은 추후 추가됩니다.", choices: [
+        { text: "과학실로 이동", nextLocation: "과학실" },
+        { text: "판매소로 이동", nextLocation: "판매소" }
+      ]}
+    ],
+    "판매소": [
+      { speaker: null, text: "판매소에 왔습니다. 아이템을 판매할 수 있습니다." },
+      { speaker: null, text: "판매 기능은 준비 중입니다.", choices: [
+        { text: "정보거래소로 이동", nextLocation: "정보거래소" },
+        { text: "제련소로 이동", nextLocation: "제련소" }
       ]}
     ]
   };
