@@ -2,16 +2,18 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<title>목박사 RPG 확장판</title>
+<title>목박사 RPG 업그레이드</title>
 <style>
-  /* 기본 스타일 유지 (앞과 같음) */
   body {
     margin: 0; padding: 0;
     font-family: 'Arial', sans-serif;
-    background-color: #111;
+    background: linear-gradient(135deg, #222 0%, #111 100%);
     color: white;
     height: 100vh;
     overflow: hidden;
+    background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80');
+    background-size: cover;
+    background-position: center;
   }
   #dialogue-container {
     position: fixed;
@@ -26,17 +28,19 @@
     padding: 15px;
     box-shadow: 0 0 15px #000;
     z-index: 10;
+    min-height: 100px;
   }
   #speaker {
     font-weight: bold;
     color: #ffdd57;
     margin-bottom: 8px;
-    font-size: 1.2em;
+    font-size: 1.3em;
+    min-height: 24px;
   }
   #dialogue-text {
     font-size: 1.1em;
-    min-height: 60px;
     white-space: pre-line;
+    min-height: 50px;
   }
   #choices {
     margin-top: 12px;
@@ -76,11 +80,11 @@
     position: fixed;
     top: 20px;
     left: 20px;
-    background: rgba(20,20,20,0.9);
+    background: rgba(20,20,20,0.85);
     border: 2px solid #555;
     border-radius: 10px;
     padding: 12px 20px;
-    width: 180px;
+    width: 220px;
     font-size: 1em;
     line-height: 1.5em;
     z-index: 20;
@@ -105,7 +109,7 @@
     border: 3px solid #555;
     border-radius: 10px;
     padding: 15px;
-    max-width: 300px;
+    max-width: 320px;
     color: white;
     box-shadow: 0 0 20px #000;
     z-index: 30;
@@ -158,10 +162,12 @@
 <body>
 
 <div id="stat-panel">
-  <div>체력: <span id="stat-hp">100</span></div>
+  <div>체력: <span id="stat-hp">100/100</span></div>
   <div>공격력: <span id="stat-atk">10</span></div>
   <div>마나: <span id="stat-mp">30</span></div>
   <div>치명타 확률: <span id="stat-crit">5%</span></div>
+  <div>돈: <span id="stat-money">10000</span>원</div>
+  <div>턴: <span id="stat-turn">1</span></div>
 </div>
 
 <div id="inventory-btn">인벤토리</div>
@@ -186,7 +192,17 @@
 </div>
 
 <script>
-  const playerStats = { hp: 100, atk: 10, mp: 30, crit: 5 };
+  // 기본 데이터와 상태
+  const playerStats = {
+    hpMax: 100,
+    hp: 100,
+    atk: 10,
+    mp: 30,
+    crit: 5,
+    money: 10000,
+    turn: 1
+  };
+
   let inventory = [
     { id: 1, name: "망가진 팔", qty: 1 },
     { id: 2, name: "모터", qty: 2 },
@@ -194,91 +210,170 @@
   ];
 
   const locations = [
-    "튜토리얼", 
-    "고물상점", 
-    "푸코상점", 
-    "헬스장", 
-    "도서관"
+    "튜토리얼",
+    "고물상점",
+    "푸코상점",
+    "헬스장",
+    "도서관",
+    "도박장",
+    "과학실",
+    "제련소",
+    "정보거래소",
+    "판매소"
   ];
+
   let currentLocation = "튜토리얼";
 
+  // UI Elements
   const statHpEl = document.getElementById("stat-hp");
   const statAtkEl = document.getElementById("stat-atk");
   const statMpEl = document.getElementById("stat-mp");
   const statCritEl = document.getElementById("stat-crit");
+  const statMoneyEl = document.getElementById("stat-money");
+  const statTurnEl = document.getElementById("stat-turn");
+
   const inventoryBtn = document.getElementById("inventory-btn");
   const inventoryPopup = document.getElementById("inventory-popup");
   const invCloseBtn = document.getElementById("inv-close-btn");
   const inventoryList = document.getElementById("inventory-list");
+
   const locationBtn = document.getElementById("location-btn");
   const locationPopup = document.getElementById("location-popup");
   const locCloseBtn = document.getElementById("loc-close-btn");
   const locationList = document.getElementById("location-list");
+
   const speakerEl = document.getElementById("speaker");
   const dialogueTextEl = document.getElementById("dialogue-text");
   const choicesEl = document.getElementById("choices");
 
-  // 장소별 스크립트 (대사 + 선택지)
+  // 장소별 스크립트
   const scripts = {
     "튜토리얼": [
       { speaker: "박사", text: "드디어....드디어 인류 최고의 발명품을 만들었어요!" },
       { speaker: "조수", text: "그게 뭔데요 박사님?" },
       { speaker: "박사", text: "내 모모짱을 닮은 무드등" },
-      { speaker: "조수", text: "아니 그걸 누가써요;;" },
+      { speaker: "조수", text: "아니 그걸 누가 써요;;" },
       { speaker: "박사", text: "...아 그런가?" },
-      { speaker: "조수", text: "하....저도 이제 지겹다고요!! 언제까지 그렇게 하실거에요!!!" },
+      { speaker: "조수", text: "하....저도 이제 지겹다고요!! 언제까지 그렇게 하실 거에요!!!" },
       { speaker: "박사", text: "내가 미안하다 광칠아..." },
-      { speaker: "조수", text: "하...저도 이젠 더이상 못해요! 전 갈꺼에요" },
-      { speaker: "박사", text: "아니 나에게 1개월, 아니 1주일만 시간을 주게!!!" },
+      { speaker: "조수", text: "하...저도 이젠 더 이상 못해요! 전 갈 거예요" },
+      { speaker: "박사", text: "아니, 나에게 1개월, 아니 1주일만 시간을 주게!!!" },
       { speaker: "조수", text: "늦었어요, 이거나 받고 꺼지세요" },
-      { speaker: null, text: "(만원 한장을 주고 작업실을 떠난 조수....)" },
+      { speaker: null, text: "(만원 한 장을 주고 작업실을 떠난 조수....)" },
       { speaker: "박사", text: "이젠 진짜 혼자가 됐어......." },
-      { speaker: "박사", text: "안돼겠어! 나 목박사 꼭 우주최강 박사가 될 태다!!!" }
+      { speaker: "박사", text: "안돼겠어! 나 목박사 꼭 우주 최강 박사가 될 테다!!!" },
+      { speaker: null, text: "게임 화면 구성에 대해 알려드릴게요." },
+      { speaker: null, text: "왼쪽 위에는 내 스탯창이 있습니다.\n체력, 공격력, 마나, 치명타 확률, 돈, 그리고 현재 턴 수를 보여줍니다." },
+      { speaker: null, text: "오른쪽 위에는 인벤토리 버튼이 있어요.\n클릭해서 아이템을 확인할 수 있습니다." },
+      { speaker: null, text: "왼쪽 아래에는 장소 이동 버튼이 있습니다.\n여기를 눌러 장소를 선택해 이동할 수 있습니다." },
+      { speaker: null, text: "중앙 아래에는 대사와 선택지가 표시됩니다.\n엔터 키로 대사를 넘기거나 선택지를 클릭해 주세요." },
+      { choice: true, choices: [
+          { text: "시작할 준비가 됐어요!", next: 21 },
+          { text: "다시 설명해줘요", next: 14 }
+        ]
+      },
+      { speaker: "박사", text: "좋아! 그럼 이제 모험을 시작해보자!" }
     ],
+
     "고물상점": [
       { speaker: null, text: "고물상점에 도착했습니다. 여기서는 고철과 부품을 살 수 있어요." },
       { choice: true, choices: [
-        { text: "부품을 구매한다", next: 2 },
+        { text: "부품 구매 (1000원)", next: 2 },
         { text: "돌아간다", next: 99 }
       ]},
-      { speaker: "상인", text: "좋은 부품 고르셨습니다. 감사합니다!" }
+      { speaker: "상인", text: "감사합니다! 좋은 부품입니다." }
     ],
+
     "푸코상점": [
       { speaker: null, text: "푸코상점입니다. 특별한 발명 아이템이 있습니다." },
       { choice: true, choices: [
-        { text: "아이템 구경하기", next: 2 },
+        { text: "아이템 구경하기 (1500원)", next: 2 },
         { text: "돌아간다", next: 99 }
       ]},
       { speaker: "푸코", text: "최고의 아이템을 가져왔어요!" }
     ],
+
     "헬스장": [
-      { speaker: null, text: "헬스장에 왔습니다. 체력을 키울 수 있어요." },
+      { speaker: null, text: "헬스장에 왔습니다. 체력을 키울 수 있어요. 운동 비용 2000원." },
       { choice: true, choices: [
-        { text: "운동한다", next: 2 },
+        { text: "운동한다 (2000원)", next: 2 },
         { text: "돌아간다", next: 99 }
       ]},
       { speaker: "트레이너", text: "잘했어요! 체력이 10 증가했습니다." }
     ],
+
     "도서관": [
-      { speaker: null, text: "도서관입니다. 새로운 지식을 얻을 수 있어요." },
+      { speaker: null, text: "도서관입니다. 새로운 지식을 얻을 수 있어요. 독서 비용 2000원." },
       { choice: true, choices: [
-        { text: "책을 읽는다", next: 2 },
+        { text: "책을 읽는다 (2000원)", next: 2 },
         { text: "돌아간다", next: 99 }
       ]},
       { speaker: "사서", text: "좋은 책을 발견했습니다!" }
-    ]
+    ],
+
+    "도박장": [
+      { speaker: null, text: "도박장에 왔습니다. 운을 시험해보세요!" },
+      { choice: true, choices: [
+        { text: "슬롯머신 돌리기 (500원)", next: 2 },
+        { text: "돌아간다", next: 99 }
+      ]},
+      { speaker: "딜러", text: "결과는 운에 맡기죠!" }
+    ],
+
+    "과학실": [
+      { speaker: null, text: "과학실입니다. 발명품 연구를 할 수 있어요." },
+      { choice: true, choices: [
+        { text: "연구한다 (3000원)", next: 2 },
+        { text: "돌아간다", next: 99 }
+      ]},
+      { speaker: "과학자", text: "흥미로운 결과가 나왔어요!" }
+    ],
+
+    "제련소": [
+      { speaker: null, text: "제련소입니다. 아이템을 강화할 수 있어요." },
+      { choice: true, choices: [
+        { text: "강화 시도 (2500원)", next: 2 },
+        { text: "돌아간다", next: 99 }
+      ]},
+      { speaker: "대장장이", text: "강화 성공! 힘이 더해졌어요." }
+    ],
+
+    "정보거래소": [
+      { speaker: null, text: "정보거래소입니다. 새로운 정보를 얻을 수 있어요." },
+      { choice: true, choices: [
+        { text: "정보 구입 (2000원)", next: 2 },
+        { text: "돌아간다", next: 99 }
+      ]},
+      { speaker: "정보상", text: "유용한 정보를 입수했습니다!" }
+    ],
+
+    "판매소": [
+      { speaker: null, text: "판매소입니다. 아이템을 팔 수 있어요." },
+      { choice: true, choices: [
+        { text: "아이템 판매", next: 2 },
+        { text: "돌아간다", next: 99 }
+      ]},
+      { speaker: "판매상", text: "감사합니다! 좋은 거래였어요." }
+    ],
   };
 
   let currentScript = scripts[currentLocation];
   let currentLine = 0;
 
+  // 타이핑 효과를 위한 변수들
+  let typingIndex = 0;
+  let typingTimer;
+
   function updateStats() {
-    statHpEl.textContent = playerStats.hp;
+    statHpEl.textContent = `${playerStats.hp}/${playerStats.hpMax}`;
     statAtkEl.textContent = playerStats.atk;
     statMpEl.textContent = playerStats.mp;
     statCritEl.textContent = playerStats.crit + "%";
+    statMoneyEl.textContent = playerStats.money;
+    statTurnEl.textContent = playerStats.turn;
   }
 
+  // 인벤토리 UI
   inventoryBtn.onclick = () => {
     renderInventory();
     inventoryPopup.style.display = "block";
@@ -288,7 +383,7 @@
   };
   function renderInventory() {
     inventoryList.innerHTML = "";
-    if(inventory.length === 0) {
+    if (inventory.length === 0) {
       inventoryList.textContent = "아이템이 없습니다.";
       return;
     }
@@ -300,82 +395,5 @@
     });
   }
 
-  locationBtn.onclick = () => {
-    renderLocations();
-    locationPopup.style.display = "block";
-  };
-  locCloseBtn.onclick = () => {
-    locationPopup.style.display = "none";
-  };
-  function renderLocations() {
-    locationList.innerHTML = "";
-    locations.forEach(loc => {
-      const div = document.createElement("div");
-      div.className = "location-item";
-      div.textContent = loc;
-      div.onclick = () => {
-        currentLocation = loc;
-        currentScript = scripts[loc];
-        currentLine = 0;
-        locationPopup.style.display = "none";
-        showLine();
-      };
-      locationList.appendChild(div);
-    });
-  }
-
-  function showLine() {
-    clearChoices();
-    if(currentLine >= currentScript.length) {
-      speakerEl.textContent = "";
-      dialogueTextEl.textContent = "장면이 끝났습니다. 다른 장소로 이동하세요.";
-      return;
-    }
-    const line = currentScript[currentLine];
-    if(line.choice) {
-      showChoices(line.choices);
-      return;
-    }
-    speakerEl.textContent = line.speaker ? line.speaker : "";
-    dialogueTextEl.textContent = line.text;
-  }
-
-  function showChoices(choices) {
-    choicesEl.innerHTML = "";
-    choices.forEach(choice => {
-      const btn = document.createElement("button");
-      btn.className = "choice-btn";
-      btn.textContent = choice.text;
-      btn.onclick = () => {
-        if(choice.next === 99){
-          // 99는 '돌아간다' 시나리오로 그냥 현재 장소 스크립트 처음으로 돌아가기
-          currentLine = 0;
-        } else {
-          currentLine = choice.next;
-        }
-        showLine();
-      };
-      choicesEl.appendChild(btn);
-    });
-  }
-
-  function clearChoices() {
-    choicesEl.innerHTML = "";
-  }
-
-  window.addEventListener("keydown", (e) => {
-    if(e.key === "Enter") {
-      if(choicesEl.childElementCount === 0) {
-        currentLine++;
-        showLine();
-      }
-    }
-  });
-
-  updateStats();
-  showLine();
-
-</script>
-
-</body>
-</html>
+  // 장소 이동 UI
+  locationBtn.onclick = ()
