@@ -1,63 +1,409 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>목박사 RPG</title>
-    <style>
-        body {
-            font-family: monospace;
-            background-color: #111;
-            color: #0f0;
-            padding: 20px;
-        }
-        #game {
-            white-space: pre-wrap;
-            background-color: #000;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #0f0;
-            min-height: 300px;
-        }
-        button {
-            margin-top: 10px;
-            padding: 5px 10px;
-            font-size: 14px;
-            background-color: #0f0;
-            color: #000;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #8f8;
-        }
-    </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>목박사 RPG — Web Demo</title>
+<style>
+  :root{--bg:#071028;--panel:#0f1720;--accent:#6ee7b7;--muted:#9fb0c8}
+  html,body{height:100%;margin:0;font-family:Apple SD Gothic Neo, Malgun Gothic, 'Noto Sans KR', sans-serif;background:linear-gradient(180deg,#020617,#071028);color:#e6eef8}
+  .wrap{max-width:1100px;margin:18px auto;display:grid;grid-template-columns:320px 1fr;gap:16px;padding:12px}
+  .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);padding:12px;border-radius:10px}
+  h2{margin:6px 0 12px;color:var(--accent)}
+  .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .stat{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px}
+  .log{height:560px;overflow:auto;padding:10px;background:#021022;border-radius:8px;border:1px solid rgba(255,255,255,0.02);white-space:pre-wrap}
+  .cmdline{display:flex;gap:8px;margin-top:10px}
+  input[type=text]{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+  button{padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:inherit;cursor:pointer}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:6px;border-bottom:1px dashed rgba(255,255,255,0.03);text-align:left;font-size:13px}
+  .small{font-size:12px;color:var(--muted)}
+  .shop-list{max-height:220px;overflow:auto}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,0.02);font-size:12px}
+  .title-row{display:flex;justify-content:space-between;align-items:center}
+  .mono{font-family:monospace}
+  .red{color:#ff6b6b}
+  .green{color:#7ee787}
+</style>
 </head>
 <body>
-    <h1>목박사 RPG</h1>
-    <div id="game"></div>
-    <button onclick="next()">다음</button>
+  <div class="wrap">
+    <div class="panel">
+      <div class="title-row">
+        <h2>플레이어 상태</h2>
+        <div class="small">목박사 RPG — 웹 데모</div>
+      </div>
+      <div class="statgrid">
+        <div class="stat">체력: <span id="hp">150</span> / <span id="maxHp">150</span></div>
+        <div class="stat">지식: <span id="knowledge">100</span></div>
+        <div class="stat">명성: <span id="reputation">100</span></div>
+        <div class="stat">돈: <span id="money">30</span> 코인</div>
+      </div>
 
-    <script>
-        // 간단한 목박사 RPG 예시 데이터
-        let step = 0;
-        const story = [
-            "당신은 목박사 연구실 앞에 서 있다...",
-            "문이 삐걱 열리며 이상한 기계음이 들린다.",
-            "목박사: '오, 드디어 왔군... 실험을 도와줄 시간이다!'",
-            "연구실 안으로 들어섰다..."
-        ];
+      <div style="margin-top:12px;">
+        <h2>인벤토리</h2>
+        <div id="inventoryList" class="small">(아직 아이템 없음)</div>
+        <div class="small" style="margin-top:8px">발명품 보유: <span id="invInventions">0</span></div>
+        <div style="margin-top:8px">
+          <label><input type="checkbox" id="haveGloves"> 장갑 착용 (영구적 효과 시뮬레이션)</label>
+          <div class="small">장갑을 체크하면 수집 시 체력/명성 감소 완화</div>
+        </div>
+      </div>
 
-        function next() {
-            if (step < story.length) {
-                document.getElementById('game').innerText += story[step] + "\n";
-                step++;
-            } else {
-                document.getElementById('game').innerText += "\n[게임 끝]";
-            }
-        }
+      <div class="panel" style="margin-top:12px">
+        <h2>푸코상점</h2>
+        <div class="small">명령어: <code>!푸코상점</code> / <code>!구매 [이름] [수량]</code></div>
+        <div id="shopList" class="shop-list small" style="margin-top:8px"></div>
+      </div>
 
-        // 첫 장면 출력
-        next();
-    </script>
+      <div class="panel" style="margin-top:12px">
+        <h2>저장 슬롯</h2>
+        <div class="small">최대 10개 저장. 명령어: <code>!저장 [이름]</code> / <code>!불러오기</code> / <code>!저장삭제 [이름]</code></div>
+        <div id="saveList" class="small" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="title-row"><h2>게임 로그</h2><div class="small mono">명령어 입력: !시작 !수집 !제작 등</div></div>
+      <div id="log" class="log"></div>
+
+      <div class="cmdline">
+        <input id="cmdInput" type="text" placeholder="명령어를 입력하세요 (예: !게임시작, !수집, !제작 못 고철)" />
+        <button id="sendBtn">전송</button>
+      </div>
+
+      <div class="controls">
+        <button onclick="showHelp()">명령어 도움</button>
+        <button onclick="quickStart()">!게임시작 (퀵)</button>
+        <button onclick="openShop()">푸코상점 보기</button>
+        <button onclick="listSaves()">저장목록</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* =========================
+   목박사 RPG — 웹 데모
+   (이 파일을 index.html로 GitHub Pages에 올리면 동작합니다)
+   ========================= */
+
+/* ---------- 초기 상태 ---------- */
+const DEFAULT = {
+  day: 1, turns: 15,
+  hp: 150, maxHp: 150,
+  knowledge: 100, reputation: 100, money: 30,
+  inventory: {}, // {item:count}
+  inventions: [], // {name, components, state, ability, basePrice}
+  gloves: false
+};
+let state = JSON.parse(JSON.stringify(DEFAULT));
+
+/* ---------- 상점 데이터 (푸코상점) ---------- */
+const SHOP_ITEMS = [
+  {name:'못', price:10}, {name:'고철', price:15}, {name:'나무', price:15},
+  {name:'철제', price:35}, {name:'운철', price:150}, {name:'플라스틱', price:80},
+  {name:'제작대', price:120}, {name:'망치', price:300}, {name:'펜치', price:350},
+  {name:'암흑물질', price:700}, {name:'우주의 먼지', price:1000},
+  {name:'조수의 팔', price:2000},{name:'조수의 머리', price:2500},{name:'조수의 다리', price:2000},{name:'조수의 심장', price:3000},
+  {name:'외계고철', price:250},{name:'외계나무', price:200},{name:'외계플라스틱', price:350},
+  {name:'신의 금속', price:800},{name:'아만타디움', price:700},{name:'미스릴', price:650},
+  {name:'만년한철', price:1250},{name:'도넛맛 딸기케쳡', price:400},{name:'크라켄의 점액', price:700},
+  {name:'오리하르콘', price:1500},{name:'비브라늄', price:1350},{name:'조수석', price:1500},
+  {name:'수석', price:5000},{name:'특수 코팅제', price:1200},{name:'반도체', price:2800},{name:'다이아몬드', price:3500},{name:'박사의 안경', price:2500}
+];
+const SHOP_MAP = {}; SHOP_ITEMS.forEach(i=>SHOP_MAP[i.name]=i.price);
+
+/* ---------- 쓰레기 드랍 테이블 ---------- */
+const SCRAP_TABLE = [
+  ['조수의 눈물', 6], ['먼지(꽝)', 30], ['박사의 머리카락', 8],
+  ['고철',15], ['솜',6], ['못',10], ['나무조각',6], ['나무',8],
+  ['비닐',4], ['플라스틱 조각',4], ['플라스틱',3], ['가죽',3],
+  ['화약',2], ['흙뭉치',3], ['돌조각',2], ['돌',2],
+  ['다이아몬드',0.5], ['반도체',0.5], ['박사의 안경',0.5], ['용의 비늘',0.5],
+  ['핵심부품',1]
+];
+
+/* ---------- 상태/가격 관련 ---------- */
+const STATE_RANGES = {
+  '매우 좋음':[0.8,0.95], '좋음':[0.6,0.79], '보통':[0.4,0.59],
+  '나쁨':[0.25,0.39], '매우 나쁨':[0.1,0.24]
+};
+const STATE_PROBS = [
+  ['매우 좋음', 10], ['좋음',20], ['보통',40], ['나쁨',20], ['매우 나쁨',10]
+]; // 퍼센트 합 100
+
+/* ---------- DOM ---------- */
+const logEl = document.getElementById('log');
+const cmdInput = document.getElementById('cmdInput');
+const sendBtn = document.getElementById('sendBtn');
+const invEl = document.getElementById('inventoryList');
+const shopEl = document.getElementById('shopList');
+const saveListEl = document.getElementById('saveList');
+const hpEl = document.getElementById('hp'), maxHpEl = document.getElementById('maxHp');
+const knowEl = document.getElementById('knowledge'), repEl = document.getElementById('reputation'), moneyEl = document.getElementById('money');
+const invCountEl = document.getElementById('invInventions');
+const glovesCheckbox = document.getElementById('haveGloves');
+
+/* ---------- 유틸 ---------- */
+function addLog(text, cls){
+  const time = new Date().toLocaleTimeString();
+  logEl.innerHTML += `[${time}] ${text}\\n`;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function chooseFromTable(tbl){
+  const total = tbl.reduce((s,i)=>s+i[1],0); let x=Math.random()*total;
+  for(const [it,w] of tbl){ if(x < w) return it; x-=w; } return tbl[0][0];
+}
+function chooseState(){
+  let x=Math.random()*100; let acc=0;
+  for(const [s,w] of STATE_PROBS){ acc+=w; if(x<acc) return s; }
+  return '보통';
+}
+function randomRange(min,max){ return Math.random()*(max-min)+min; }
+
+/* ---------- UI 업데이트 ---------- */
+function updateStats(){
+  hpEl.textContent = state.hp; maxHpEl.textContent = state.maxHp;
+  knowEl.textContent = state.knowledge; repEl.textContent = state.reputation;
+  moneyEl.textContent = state.money; invCountEl.textContent = state.inventions.length;
+  glovesCheckbox.checked = state.gloves;
+  renderInventory(); renderShop(); listSaves();
+}
+function renderInventory(){
+  const inv = state.inventory; const keys = Object.keys(inv);
+  if(keys.length===0){ invEl.textContent='(아직 아이템 없음)'; return; }
+  let html = '<table><thead><tr><th>아이템</th><th>수량</th></tr></thead><tbody>';
+  for(const k of keys) html += `<tr><td>${k}</td><td>${inv[k]}</td></tr>`;
+  html += '</tbody></table>'; invEl.innerHTML = html;
+}
+function renderShop(){
+  shopEl.innerHTML = SHOP_ITEMS.map(i=>`<div style="padding:6px 0"><strong>${i.name}</strong> — ${i.price}코인</div>`).join('');
+}
+
+/* ---------- 저장 관리 (localStorage) ---------- */
+const SAVE_KEY = 'mb_saves';
+function loadSaves(){ return JSON.parse(localStorage.getItem(SAVE_KEY)||'[]'); }
+function saveSaves(arr){ localStorage.setItem(SAVE_KEY, JSON.stringify(arr)); }
+function listSaves(){
+  const arr = loadSaves(); if(arr.length===0){ saveListEl.textContent='저장파일 없음'; return; }
+  saveListEl.innerHTML = arr.map((s,i)=>`<div>${i+1}. <strong>${s.name}</strong> — ${s.desc} — ${s.day}일차 — 체력:${s.stats.hp} 지식:${s.stats.knowledge} 명성:${s.stats.reputation} 돈:${s.stats.money}</div>`).join('');
+}
+
+/* ---------- 게임 명령어 처리 ---------- */
+function cmdParser(raw){
+  if(!raw) return;
+  addLog('> ' + raw);
+  const parts = raw.trim().split(/\\s+/);
+  const cmd = parts[0];
+  const args = parts.slice(1);
+
+  // 기본 명령어
+  if(cmd === '!게임시작'){
+    state = JSON.parse(JSON.stringify(DEFAULT));
+    addLog('게임 시작! 박사를 우주최고 박사로 만들자! 🚀');
+    updateStats(); return;
+  }
+
+  if(cmd === '!수집'){
+    let hpLoss = 5, repLoss = 3;
+    if(state.gloves) { hpLoss = 2; repLoss = 1; }
+    state.hp = Math.max(0, state.hp - hpLoss);
+    state.reputation = Math.max(0, state.reputation - repLoss);
+    const found = chooseFromTable(SCRAP_TABLE);
+    state.inventory[found] = (state.inventory[found]||0)+1;
+    addLog(`고물가게에서 수집: ${found} 획득! (체력 -${hpLoss}, 명성 -${repLoss})`);
+    updateStats(); return;
+  }
+
+  if(cmd === '!푸코상점'){
+    renderShop();
+    addLog('푸코상점 아이템을 표시했습니다. 구매: !구매 [이름] [수량]');
+    return;
+  }
+
+  if(cmd === '!구매'){
+    if(args.length<1){ addLog('사용법: !구매 [아이템명] [수량]'); return; }
+    const name = args[0]; const qty = Math.max(1, parseInt(args[1])||1);
+    const price = SHOP_MAP[name];
+    if(price===undefined){ addLog('푸코상점에 해당 품목이 없습니다.'); return; }
+    const cost = price*qty;
+    if(state.money < cost){ addLog(`돈이 부족합니다. 필요: ${cost} 코인`); return; }
+    state.money -= cost; state.inventory[name] = (state.inventory[name]||0)+qty;
+    addLog(`${name} ${qty}개 구매 완료 (-${cost}코인).`);
+    updateStats(); return;
+  }
+
+  if(cmd === '!제작'){
+    if(args.length < 2){ addLog('제작하려면 부품을 최소 2개 이상 입력하세요. 예: !제작 못 고철'); return; }
+    if(args.length > 10){ addLog('부품은 최대 10개까지만 가능합니다.'); return; }
+    // 재료 체크
+    const need = {};
+    for(const a of args){ need[a] = (need[a]||0)+1; }
+    const lacking = [];
+    for(const k in need){ if((state.inventory[k]||0) < need[k]) lacking.push(`${k} ${need[k]- (state.inventory[k]||0)}개`); }
+    if(lacking.length>0){ addLog('재료가 부족합니다: ' + lacking.join(', ')); return; }
+    // 재료 소모
+    for(const k in need){ state.inventory[k] -= need[k]; if(state.inventory[k]===0) delete state.inventory[k]; }
+    // 이름 생성 (수투듀오 스타일)
+    const name = generateSutuName(args);
+    // 능력 랜덤(간단)
+    const ability = generateAbilityGuess(args);
+    // 상태 부여
+    const stateName = chooseState();
+    // 원가: 합 산정 (상점가격 기준 있으면 이용, 없으면 100 기본)
+    let baseCost = 0;
+    for(const a of args){ baseCost += (SHOP_MAP[a] || 100); }
+    // 원가에서 10~30% 할인 적용
+    const discount = randomRange(0.10,0.30);
+    const finalPrice = Math.max(1, Math.round(baseCost * (1 - discount)));
+    // 발명품 생성
+    const inv = {name, components: args.slice(), state: stateName, ability, basePrice: finalPrice};
+    state.inventions.push(inv);
+    addLog(`발명완료: "${name}" 생성! (상태: ${stateName}) 가격(원가계산): ${finalPrice} 코인`);
+    updateStats(); return;
+  }
+
+  if(cmd === '!저장'){
+    const name = args.join(' ') || prompt('저장파일 이름을 입력하세요 (예: 첫번째저장)');
+    if(!name){ addLog('저장 취소. 이름이 필요합니다.'); return; }
+    // 설명 입력
+    const desc = prompt('저장설명(최대150자)을 입력하세요','');
+    const arr = loadSaves();
+    if(arr.length >= 10){ addLog('저장 슬롯이 가득 찼습니다 (최대 10). 기존 저장을 삭제하세요.'); return; }
+    const slot = {name, desc: desc||'', day: state.day, stats: {hp:state.hp,knowledge:state.knowledge,reputation:state.reputation,money:state.money}, inventory: state.inventory, inventions: state.inventions};
+    arr.push(slot); saveSaves(arr);
+    addLog(`저장 완료: ${name} — ${desc||'(설명 없음)'}`);
+    listSaves(); return;
+  }
+
+  if(cmd === '!불러오기'){
+    const arr = loadSaves();
+    if(arr.length===0){ addLog('저장된 게임이 없습니다.'); return; }
+    if(args.length===0){
+      // 목록 출력 안내
+      addLog('저장 목록:');
+      arr.forEach((s,i)=> addLog(`${i+1}. ${s.name} — ${s.desc} — ${s.day}일차 (명령어: !불러오기 ${i+1})`));
+      return;
+    } else {
+      const idx = parseInt(args[0]) - 1;
+      if(isNaN(idx) || idx<0 || idx>=arr.length){ addLog('잘못된 번호입니다.'); return; }
+      const s = arr[idx];
+      // 불러오기 (간단 복사)
+      state.day = s.day; state.hp = s.stats.hp; state.knowledge = s.stats.knowledge; state.reputation = s.stats.reputation; state.money = s.stats.money;
+      state.inventory = JSON.parse(JSON.stringify(s.inventory)); state.inventions = JSON.parse(JSON.stringify(s.inventions));
+      addLog(`저장 불러오기 완료: ${s.name} (설명: ${s.desc})`);
+      updateStats(); return;
+    }
+  }
+
+  if(cmd === '!저장삭제'){
+    const name = args.join(' ');
+    if(!name){ addLog('사용법: !저장삭제 [저장파일이름]'); return; }
+    let arr = loadSaves();
+    const idx = arr.findIndex(s=>s.name===name);
+    if(idx===-1){ addLog('해당 이름의 저장파일이 없습니다.'); return; }
+    if(!confirm(`"${name}" 저장파일을 정말 삭제할까요?`)) { addLog('삭제 취소'); return; }
+    arr.splice(idx,1); saveSaves(arr); addLog(`저장파일 "${name}" 삭제 완료.`); listSaves(); return;
+  }
+
+  if(cmd === '!도서관' || cmd === '!독서'){
+    if(state.money < 500){ addLog('도서관 입장료 500코인이 필요합니다.'); return; }
+    state.money -= 500;
+    const gain = randInt(10,30); state.knowledge += gain;
+    addLog(`도서관에서 독서: 지식 +${gain} 획득 (500코인 소모)`);
+    updateStats(); return;
+  }
+
+  if(cmd === '!헬스장' || cmd === '!운동'){
+    if(state.money < 500){ addLog('헬스장 입장료 500코인이 필요합니다.'); return; }
+    state.money -= 500;
+    const gain = randInt(10,30); state.maxHp += gain; // 하루 지나면 풀피 유지 로직은 추후 추가
+    addLog(`헬스장에서 운동: 최대체력 +${gain} 증가 (500코인 소모)`);
+    updateStats(); return;
+  }
+
+  if(cmd === '!감정'){
+    if(args.length < 2){ addLog('사용법: !감정 [가격|상태|능력|모두] [발명품이름]'); return; }
+    const mode = args[0]; const name = args.slice(1).join(' ');
+    const inv = state.inventions.find(x=>x.name === name);
+    if(!inv){ addLog('해당 발명품을 보유하고 있지 않습니다.'); return; }
+    if(mode === '모두'){
+      if(state.money < 5500){ addLog('감정(모두) 비용 5500코인 필요'); return; }
+      state.money -= 5500; addLog(`${name} — 가격: ${inv.basePrice}코인 / 상태: ${inv.state} / 능력: ${inv.ability || '(없음)'}`); updateStats(); return;
+    } else {
+      if(state.money < 2000){ addLog('감정 비용 2000코인 필요'); return; }
+      state.money -= 2000;
+      if(mode === '가격'){ addLog(`${name}의 가격: ${inv.basePrice} 코인`); }
+      else if(mode === '상태'){ addLog(`${name}의 상태: ${inv.state}`); }
+      else if(mode === '능력'){ addLog(`${name}의 능력: ${inv.ability || '(없음)'}`); }
+      else addLog('감정 항목은 가격/상태/능력/모두 중 하나입니다.');
+      updateStats(); return;
+    }
+  }
+
+  // 알 수 없는 명령어
+  addLog('알 수 없는 명령어입니다. "명령어 도움"을 눌러 확인하세요.');
+}
+
+/* ---------- 보조: 수투듀오 스타일 이름/능력 생성 ---------- */
+const SUTU_PREFIX = ['광칠의','박사의','초우주의','똥맛','무한','찐한','엑스','조수불안정','갈라진','미끄럼'];
+const SUTU_MID = ['미끄럼','똥구멍','광기','시간','도파민','돌연변이','초진공','등가교환','얼굴','행복'];
+const SUTU_SUFFIX = ['장갑','리모콘','기계','박스','버튼','알약','망치','선글라스','머신','의자'];
+
+function generateSutuName(parts){
+  // parts influence: if special words present, bias name
+  const p = parts.join(' ').toLowerCase();
+  let prefix = SUTU_PREFIX[Math.floor(Math.random()*SUTU_PREFIX.length)];
+  let mid = SUTU_MID[Math.floor(Math.random()*SUTU_MID.length)];
+  let suffix = SUTU_SUFFIX[Math.floor(Math.random()*SUTU_SUFFIX.length)];
+  // If '박사의' components present, emphasize
+  if(p.includes('박사의')) prefix = '박사의';
+  // If '다이아몬드' or '수석' 들어가면 elevate name
+  if(p.includes('다이아몬드')||p.includes('수석')) { prefix = '신성한'; mid = '빛나는'; suffix = '장치'; }
+  // assemble
+  const name = `${prefix} ${mid}${suffix.includes('리모')?'':' '}${suffix}`.replace(/\s+/g,' ').trim();
+  // Add random quirky postfix sometimes
+  if(Math.random() < 0.25) return name + ' (β형)';
+  return name;
+}
+
+function generateAbilityGuess(parts){
+  // simple heuristics
+  if(parts.some(x=>/(다이아몬드|반도체|암흑물질|핵심부품|신의 금속)/.test(x))) return '강력한 특수 효과(불안정)';
+  if(parts.some(x=>/(망치|펜치|제작대)/.test(x))) return '제작·수리 보조';
+  if(parts.some(x=>/(박사의 머리카락|박사의 안경)/.test(x))) return '지식·연구 보너스';
+  if(Math.random() < 0.3) return '(능력 없음)';
+  return '작업 보조(소량의 이득)';
+}
+
+/* ---------- 이벤트 바인딩 ---------- */
+sendBtn.addEventListener('click', ()=>{ const v = cmdInput.value.trim(); if(v) { cmdParser(v); cmdInput.value=''; }});
+cmdInput.addEventListener('keypress', (e)=>{ if(e.key==='Enter'){ sendBtn.click(); }} );
+glovesCheckbox.addEventListener('change', ()=>{ state.gloves = glovesCheckbox.checked; addLog(`장갑 ${state.gloves ? '착용' : '해제'}`); updateStats(); });
+
+/* ---------- 초기화 ---------- */
+addLog('목박사 RPG 웹 데모에 오신 것을 환영합니다! !게임시작 으로 시작하세요.');
+renderShop();
+updateStats();
+
+/* ---------- 외부 호출 도움 함수 (버튼용) ---------- */
+function showHelp(){
+  addLog('명령어 도움:\\n!게임시작 / !수집 / !푸코상점 / !구매 [이름] [수량] / !제작 부품1 부품2 ...\\n!저장 [이름] / !불러오기 / !저장삭제 [이름]\\n!도서관 / !독서 / !헬스장 / !운동 / !감정 [가격|상태|능력|모두] [발명품이름]');
+}
+function quickStart(){ cmdParser('!게임시작'); }
+function openShop(){ cmdParser('!푸코상점'); }
+function listSaves(){ cmdParser('!불러오기'); }
+
+/* ---------- 저장 헬퍼 (localStorage wrapper) ---------- */
+function loadSaves(){ return JSON.parse(localStorage.getItem('mb_saves')||'[]'); }
+function saveSaves(arr){ localStorage.setItem('mb_saves', JSON.stringify(arr)); }
+
+/* ---------- 유틸 노트: randomRange ---------- */
+function randomRange(a,b){ return Math.random()*(b-a)+a; }
+
+</script>
 </body>
 </html>
