@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>목박사 RPG - 장소별 기능</title>
+<title>목박사 RPG - 헬스장 최대체력 증가 포함 완성본</title>
 <style>
   body {
     background: #111;
@@ -127,7 +127,7 @@
       ]}
     ],
     "헬스장": [
-      { speaker: null, text: "헬스장에 왔습니다. 운동하면 체력이 늘어납니다." },
+      { speaker: null, text: "헬스장에 왔습니다. 운동하면 최대체력이 증가합니다." },
       { speaker: null, text: "운동은 2000원을 내야 합니다.", choices: [
         { text: "튜토리얼로 돌아가기", nextLocation: "튜토리얼" },
         { text: "고물상점으로 이동", nextLocation: "고물상점" },
@@ -185,7 +185,10 @@
     ]
   };
 
-  // 장소별 고유 기능 버튼 활성화
+  function updateStats(){
+    statsDiv.textContent = `체력: ${player.hp}/${player.hpMax} | 공격력: ${player.atk} | 마나: ${player.mp} | 치명타: ${player.crit}% | 돈: ${player.money}원 | 턴: ${player.turn}`;
+  }
+
   function showActionButton(){
     actionArea.innerHTML = "";
     if(currentLocation === "헬스장"){
@@ -203,22 +206,23 @@
     } else if(currentLocation === "도박장"){
       const btn = document.createElement("button");
       btn.id = "actionBtn";
-      btn.textContent = "도박하기 (운 시험)";
+      btn.textContent = "도박하기 (1000원 배팅)";
       btn.onclick = () => gamble();
       actionArea.appendChild(btn);
     }
   }
 
-  // 고유 기능 함수들
   function doExercise(){
     if(player.money < 2000){
       alert("돈이 부족합니다!");
       return;
     }
     player.money -= 2000;
-    player.hp = Math.min(player.hpMax, player.hp + 10);
+    player.hpMax += 10;
+    player.hp += 10;
+    if(player.hp > player.hpMax) player.hp = player.hpMax;
     player.turn++;
-    alert("운동으로 체력이 10 회복되었습니다!");
+    alert("운동으로 최대체력이 10 증가했습니다!");
     updateStats();
     showLine();
   }
@@ -231,7 +235,7 @@
     player.money -= 2000;
     player.mp += 10;
     player.turn++;
-    alert("독서로 마나가 10 회복되었습니다!");
+    alert("독서로 마나가 10 증가했습니다!");
     updateStats();
     showLine();
   }
@@ -246,7 +250,7 @@
     const win = Math.random() < 0.5;
     if(win){
       player.money += bet * 2;
-      alert("도박에서 이겼습니다! 돈이 2000원 증가했습니다!");
+      alert("도박에서 이겼습니다! 2000원을 획득했습니다!");
     } else {
       alert("도박에서 졌습니다... 1000원을 잃었습니다.");
     }
@@ -255,15 +259,11 @@
     showLine();
   }
 
-  function updateStats(){
-    statsDiv.textContent = `체력: ${player.hp}/${player.hpMax} | 공격력: ${player.atk} | 마나: ${player.mp} | 치명타: ${player.crit}% | 돈: ${player.money}원 | 턴: ${player.turn}`;
-  }
-
   function showLine(){
     if(currentLine >= currentScript.length){
       dialogueDiv.textContent = "";
       choicesDiv.innerHTML = "";
-      showActionButton(); // 장소별 액션 버튼 보여주기
+      showActionButton();
       return;
     }
     updateStats();
@@ -331,4 +331,4 @@
 </script>
 
 </body>
-</html>
+</html>4
