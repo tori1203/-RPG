@@ -1,76 +1,102 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>목박사 RPG - 통합 완성본</title>
+<title>목박사 RPG - 레이아웃&이미지 통합</title>
 <style>
   :root{
     --bg:#0e0f12; --card:#171922; --ink:#e9ecf2; --muted:#a6b0c3;
     --accent:#6ae2ff; --accent2:#9d7cff; --good:#57f287; --bad:#ff6b6b;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:linear-gradient(180deg,#0b0c10,#14161d);color:var(--ink);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Apple SD Gothic Neo,Malgun Gothic,Arial}
-  .wrap{max-width:1100px;margin:0 auto;padding:16px}
-  header{display:flex;gap:12px;align-items:flex-start}
+  body{margin:0;background:linear-gradient(180deg,#0b0c10,#14161d);color:var(--ink);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Apple SD Gothic Neo,Malgun Gothic}
+  .grid{
+    display:grid;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: 1fr auto;
+    min-height:100dvh;
+    gap:12px;
+  }
   .panel{background:var(--card);border-radius:14px;padding:12px;box-shadow:0 10px 30px #0006}
-  #stats{flex:1}
-  #stats h2{margin:0 0 8px;font-size:18px;color:var(--accent)}
-  #main{margin-top:14px;display:grid;grid-template-columns:1.2fr 0.8fr;gap:14px}
-  #dialogueBox{min-height:180px}
-  #dialogue{white-space:pre-line;line-height:1.5;min-height:120px}
-  #choices button, .btn{background:#232633;color:var(--ink);border:none;border-radius:10px;padding:10px 12px;cursor:pointer;font-size:14px}
-  #choices button:hover,.btn:hover{filter:brightness(1.15)}
-  #actionArea .btn{margin:6px 6px 0 0}
-  #locationBtn{position:fixed;left:16px;bottom:16px;z-index:30}
-  #inventoryBtn{position:fixed;right:16px;bottom:16px;z-index:30}
-  #locationList{position:fixed;left:16px;bottom:70px;width:240px;display:none;flex-direction:column;gap:8px;z-index:40}
-  #inventory{position:fixed;right:16px;bottom:70px;width:320px;display:none;z-index:40}
+  /* 좌측: 스탯 */
+  #stats{grid-column:1;grid-row:1/3;display:flex;flex-direction:column;gap:8px}
+  #stats h2{margin:0 0 6px;color:var(--accent);font-size:18px}
   .row{display:flex;justify-content:space-between;gap:8px;margin:2px 0;color:var(--muted)}
   .bar{height:10px;background:#2a2f3d;border-radius:999px;overflow:hidden}
   .fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
-  .muted{color:var(--muted)}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .tag{font-size:12px;color:#cbd5e1;background:#1f2430;border-radius:8px;padding:2px 8px}
   .hidden{display:none}
+  .tag{font-size:12px;color:#cbd5e1;background:#1f2430;border-radius:8px;padding:2px 8px;display:inline-block}
+
+  /* 중앙: 장면 이미지 */
+  #scene{grid-column:2;grid-row:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:420px;overflow:hidden}
+  #scene img{width:100%;height:100%;object-fit:cover;border-radius:10px;opacity:.96}
+  #scene .overlay{position:absolute;right:10px;top:10px;display:flex;gap:6px;flex-wrap:wrap}
+  .btn{background:#232633;color:var(--ink);border:none;border-radius:10px;padding:10px 12px;cursor:pointer;font-size:14px}
+  .btn:hover{filter:brightness(1.12)}
+
+  /* 아래: 대사/선택지 */
+  #dialogueBar{grid-column:1/3;grid-row:2}
+  #dialogue{white-space:pre-line;line-height:1.55;min-height:86px;color:var(--ink)}
+  #choices{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}
+  #choices .btn{padding:9px 12px}
+
+  /* 플로팅 */
+  #locationBtn{position:fixed;left:16px;bottom:16px;z-index:40}
+  #inventoryBtn{position:fixed;right:16px;bottom:16px;z-index:40}
+  #imageBtn{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:40}
+  #locationList, #inventory, #imagePanel{
+    position:fixed;bottom:70px;z-index:50;display:none;max-width:92vw
+  }
+  #locationList{left:16px;width:260px}
+  #inventory{right:16px;width:320px}
+  #imagePanel{left:50%;transform:translateX(-50%);width:520px}
+  #invList .row{align-items:center}
+  @media (max-width:900px){
+    .grid{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
+    #stats{grid-column:1;grid-row:auto;flex-direction:row;flex-wrap:wrap}
+    #scene{grid-column:1}
+    #dialogueBar{grid-column:1}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <section id="stats" class="panel">
-      <h2>📊 스탯</h2>
-      <div class="row"><span>체력</span><span id="hpText"></span></div>
-      <div class="bar"><div id="hpBar" class="fill" style="width:100%"></div></div>
-      <div class="grid2" style="margin-top:8px">
-        <div class="row"><span>공격력</span><b id="atkText"></b></div>
-        <div class="row"><span>지능</span><b id="intText"></b></div>
-        <div class="row"><span>방어력</span><b id="defText"></b></div>
-        <div class="row"><span>돈</span><b id="moneyText"></b></div>
-        <div class="row"><span>명예</span><b id="honorText"></b></div>
-        <div class="row"><span>턴</span><b id="turnText"></b></div>
-      </div>
-      <div id="dungeonExtra" class="grid2 hidden" style="margin-top:8px">
-        <div class="row"><span>마나</span><b id="mpText"></b></div>
-        <div class="row"><span>치명타</span><b id="critText"></b></div>
-      </div>
-    </section>
-  </header>
+<div class="grid">
+  <!-- 왼쪽: 스탯 -->
+  <section id="stats" class="panel">
+    <h2>📊 스탯</h2>
+    <div class="row"><span>체력</span><span id="hpText"></span></div>
+    <div class="bar"><div id="hpBar" class="fill"></div></div>
+    <div class="grid2" style="margin-top:8px">
+      <div class="row"><span>공격력</span><b id="atkText"></b></div>
+      <div class="row"><span>지능</span><b id="intText"></b></div>
+      <div class="row"><span>방어력</span><b id="defText"></b></div>
+      <div class="row"><span>돈</span><b id="moneyText"></b></div>
+      <div class="row"><span>명예</span><b id="honorText"></b></div>
+      <div class="row"><span>턴</span><b id="turnText"></b></div>
+    </div>
+    <div id="dungeonExtra" class="grid2 hidden" style="margin-top:8px">
+      <div class="row"><span>마나</span><b id="mpText"></b></div>
+      <div class="row"><span>치명타</span><b id="critText"></b></div>
+    </div>
+  </section>
 
-  <section id="main">
-    <section id="dialogueBox" class="panel">
-      <div id="locationName" class="tag">튜토리얼</div>
-      <div id="dialogue" class="muted"></div>
-      <div id="choices" style="margin-top:8px"></div>
-    </section>
-    <section id="side" class="panel">
-      <h3 style="margin:0 0 8px">⚙️ 행동</h3>
-      <div id="actionArea"></div>
-    </section>
+  <!-- 중앙: 장면 이미지 (+행동 오버레이) -->
+  <section id="scene" class="panel">
+    <img id="sceneImg" alt="장면 이미지 (여기에 업로드한 이미지가 표시됩니다)">
+    <div id="actionOverlay" class="overlay"></div>
+    <div id="locationTag" class="tag" style="position:absolute;left:10px;top:10px">튜토리얼</div>
+  </section>
+
+  <!-- 아래: 대사/선택지 -->
+  <section id="dialogueBar" class="panel">
+    <div id="dialogue" class="muted"></div>
+    <div id="choices"></div>
   </section>
 </div>
 
-<!-- Floating menus -->
+<!-- 플로팅 메뉴 -->
 <button id="locationBtn" class="btn">🗺️ 장소 이동</button>
 <div id="locationList" class="panel"></div>
 
@@ -80,28 +106,42 @@
   <div id="invList" class="muted"></div>
 </div>
 
+<button id="imageBtn" class="btn">🎴 이미지 등록</button>
+<div id="imagePanel" class="panel">
+  <h3 style="margin:0 8px 8px">🎴 장면 이미지 등록</h3>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <label>장면</label>
+    <select id="sceneSelect" class="btn" style="padding:8px">
+      <!-- JS에서 LOCATIONS + 인트로 등록 -->
+    </select>
+    <input id="fileInput" type="file" accept="image/*" class="btn" style="padding:8px;background:#1f2430">
+    <button id="applyImg" class="btn">등록</button>
+  </div>
+  <div class="muted" style="margin-top:8px">파일을 선택하면 해당 장면에 이미지를 매핑합니다. 대화/이동 시 자동 표시됩니다.</div>
+</div>
+
 <script>
 (() => {
   // ---------- Player & Data ----------
   const player = {
     hpMax: 100, hp: 100, mpMax: 40, mp: 40,
-    atk: 10, def: 2, int: 0, crit: 10, // crit: %
+    atk: 10, def: 2, int: 0, crit: 10, // %
     money: 10000, honor: 0, turn: 1,
     inventory: {}
   };
+  let starterClaimed = false;
 
-  // Catalogs
   const ITEMS = {
     "스크랩": {type:"재료", price:100},
     "배터리팩": {type:"재료", price:400},
     "강철조각": {type:"재료", price:300},
-    "응급키트": {type:"소모", price:500, use: () => { player.hp = Math.min(player.hpMax, player.hp+40); message("응급키트 사용! 체력 +40"); }},
-    "지능서적": {type:"소모", price:1200, use: () => { player.int += 1; message("지능서적 사용! 지능 +1"); }},
+    "응급키트": {type:"소모", price:500, use: () => { player.hp = Math.min(player.hpMax, player.hp+40); say("응급키트 사용! 체력 +40"); }},
+    "지능서적": {type:"소모", price:1200, use: () => { player.int += 1; say("지능서적 사용! 지능 +1"); }},
     "스크랩소드": {type:"무기", price:1200, atk: +3},
     "과학자의망치": {type:"무기", price:3200, atk: +6},
   };
 
-  const JUNK_EXCHANGE = [ // 고물가게: 돈+명예로 교환
+  const JUNK_EXCHANGE = [
     {name:"응급키트", money:1500, honor:1},
     {name:"지능서적", money:2000, honor:2},
     {name:"과학자의망치", money:4000, honor:3}
@@ -119,7 +159,14 @@
     "도박장","과학실","제련소","정보거래소","판매소","던전"
   ];
 
-  // ---------- UI Elements ----------
+  // 장면 이미지 저장소 (사용자가 업로드하면 채워짐)
+  const SCENE_IMAGES = {
+    // "인트로1": blobUrl,
+    // "튜토리얼": blobUrl,
+    // "던전": blobUrl,
+  };
+
+  // ---------- DOM ----------
   const hpText = document.getElementById("hpText");
   const hpBar = document.getElementById("hpBar");
   const atkText = document.getElementById("atkText");
@@ -132,20 +179,25 @@
   const critText = document.getElementById("critText");
   const dungeonExtra = document.getElementById("dungeonExtra");
 
+  const sceneImg = document.getElementById("sceneImg");
+  const actionOverlay = document.getElementById("actionOverlay");
+  const locationTag = document.getElementById("locationTag");
+
   const dialogue = document.getElementById("dialogue");
   const choices = document.getElementById("choices");
-  const actionArea = document.getElementById("actionArea");
   const locationBtn = document.getElementById("locationBtn");
   const locationList = document.getElementById("locationList");
   const inventoryBtn = document.getElementById("inventoryBtn");
   const inventoryPanel = document.getElementById("inventory");
   const invList = document.getElementById("invList");
-  const locationName = document.getElementById("locationName");
 
-  let currentLocation = "튜토리얼";
-  let typingLock = false;
+  const imageBtn = document.getElementById("imageBtn");
+  const imagePanel = document.getElementById("imagePanel");
+  const sceneSelect = document.getElementById("sceneSelect");
+  const fileInput = document.getElementById("fileInput");
+  const applyImg = document.getElementById("applyImg");
 
-  // ---------- Utility ----------
+  // ---------- Utils ----------
   function updateStats(){
     hpText.textContent = `${player.hp}/${player.hpMax}`;
     hpBar.style.width = `${Math.max(0,Math.min(100, player.hp/player.hpMax*100))}%`;
@@ -160,15 +212,10 @@
     dungeonExtra.classList.toggle("hidden", currentLocation!=="던전");
     renderInventory();
   }
-  function gainItem(name, n=1){
-    player.inventory[name]=(player.inventory[name]||0)+n;
-    tip(`아이템 획득: ${name} x${n}`);
-  }
+  function gainItem(name, n=1){ player.inventory[name]=(player.inventory[name]||0)+n; }
   function consumeItem(name, n=1){
     if((player.inventory[name]||0) < n) return false;
-    player.inventory[name]-=n;
-    if(player.inventory[name]<=0) delete player.inventory[name];
-    return true;
+    player.inventory[name]-=n; if(player.inventory[name]<=0) delete player.inventory[name]; return true;
   }
   function renderInventory(){
     if(Object.keys(player.inventory).length===0){ invList.innerHTML = `<div class="muted">아이템이 없습니다.</div>`; return; }
@@ -185,173 +232,245 @@
       row.append(left,right); invList.appendChild(row);
     }
   }
-  function message(text){ type(`${text}`); }
-  function tip(t){ console.log(t); }
 
-  // Typewriter
+  let typingLock=false;
   async function type(text){
     if(typingLock) return;
     typingLock=true;
     dialogue.textContent="";
-    choices.innerHTML="";
-    const speed=18;
     for(let i=0;i<text.length;i++){
       dialogue.textContent += text[i];
-      await new Promise(r=>setTimeout(r, speed));
+      await new Promise(r=>setTimeout(r, 16));
     }
     typingLock=false;
   }
-
-  // ---------- Dialogue / Intro ----------
-  const intro = [
-    `박사: 드디어....드디어 인류 최고의 발명품을 만들었어요!`,
-    `조수: 그게 뭔데요 박사님?`,
-    `박사: 내 모모짱을 닮은 무드등`,
-    `조수: 아니 그걸 누가 써요;;`,
-    `박사: ...아 그런가?`,
-    `조수: 하....저도 이젠 지겹다고요!! 언제까지 그렇게 하실거에요!!!`,
-    `박사: 내가 미안하다 광칠아...`,
-    `조수: 늦었어요. 이거나 받고 꺼지세요. (만원 한 장을 던지고 떠난다)`,
-    `박사: ...이젠 진짜 혼자가 됐어.......`,
-    `박사: 안되겠어! 나 목박사, 꼭 우주최강 박사가 될 테다!!!`,
-    `박사는 광칠이의 '마지막 1만원'을 들고 인근 고물가게를 떠올렸다...`
-  ];
-  let introIdx=0;
-
-  function nextIntro(){
-    if(introIdx < intro.length){
-      type(intro[introIdx++]);
-    } else {
-      go("튜토리얼");
+  function say(text, sceneKey=null){
+    if(sceneKey) showScene(sceneKey);
+    type(text);
+    choices.innerHTML="";
+  }
+  function showScene(key){
+    const url = SCENE_IMAGES[key] || SCENE_IMAGES[currentLocation] || "";
+    if(url){ sceneImg.src = url; }
+    else{
+      // 기본 빈 장면
+      sceneImg.removeAttribute("src");
+      sceneImg.alt = "이미지를 등록하세요 (🎴 이미지 등록 버튼)";
     }
   }
-  document.addEventListener("keydown",(e)=>{ if(e.key==="Enter" && !typingLock && currentLocation==="인트로"){ nextIntro(); }});
 
-  // ---------- Locations / Actions ----------
-  function listLocations(){
+  // ---------- Intro ----------
+  const intro = [
+    { text:`박사: 드디어....드디어 인류 최고의 발명품을 만들었어요!`, scene:"인트로1" },
+    { text:`조수: 그게 뭔데요 박사님?`, scene:"인트로2" },
+    { text:`박사: 내 모모짱을 닮은 무드등`, scene:"인트로2" },
+    { text:`조수: 아니 그걸 누가 써요;;`, scene:"인트로2" },
+    { text:`박사: ...아 그런가?`, scene:"인트로2" },
+    { text:`조수: 하....저도 이젠 지겹다고요!! 언제까지 그렇게 하실거에요!!!`, scene:"인트로2" },
+    { text:`박사: 내가 미안하다 광칠아...`, scene:"인트로3" },
+    { text:`조수: 늦었어요. 이거나 받고 꺼지세요. (만원 한 장을 던지고 떠난다)`, scene:"인트로3" },
+    { text:`박사: ...이젠 진짜 혼자가 됐어.......`, scene:"인트로3" },
+    { text:`박사: 안되겠어! 나 목박사, 꼭 우주최강 박사가 될 테다!!!`, scene:"인트로4" },
+    { text:`박사는 광칠이의 '마지막 1만원'을 들고 인근 고물가게를 떠올렸다...`, scene:"인트로4" },
+  ];
+  let introIdx=0;
+  let currentLocation="인트로";
+
+  document.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter" && !typingLock && currentLocation==="인트로"){
+      if(introIdx < intro.length){
+        const line=intro[introIdx++]; say(line.text, line.scene);
+      }else{ go("튜토리얼"); }
+    }
+  });
+
+  // ---------- Location/Actions ----------
+  function buildLocationList(){
     locationList.innerHTML="";
     LOCATIONS.forEach(loc=>{
-      const b=document.createElement("button"); b.className="btn"; b.textContent=loc;
+      const b=document.createElement("button"); b.className="btn"; b.textContent = (loc===currentLocation?`✅ ${loc}`:loc);
       b.onclick=()=>{ go(loc); locationList.style.display="none"; };
       locationList.appendChild(b);
     });
-    locationList.style.display="flex";
   }
-  locationBtn.onclick=()=>{ locationList.style.display = (locationList.style.display==="flex")?"none":"flex"; };
-
+  document.addEventListener("click",(e)=>{
+    if(!locationList.contains(e.target) && e.target!==locationBtn){ locationList.style.display="none"; }
+    if(!inventoryPanel.contains(e.target) && e.target!==inventoryBtn){ inventoryPanel.style.display="none"; }
+    if(!imagePanel.contains(e.target) && e.target!==imageBtn && e.target!==applyImg && e.target!==fileInput){ imagePanel.style.display="none"; }
+  });
+  locationBtn.onclick=()=>{
+    if(locationList.style.display==="block"){ locationList.style.display="none"; }
+    else{ buildLocationList(); locationList.style.display="block"; }
+  };
   inventoryBtn.onclick=()=>{ inventoryPanel.style.display = (inventoryPanel.style.display==="block")?"none":"block"; };
+  imageBtn.onclick=()=>{ imagePanel.style.display = (imagePanel.style.display==="block")?"none":"block"; };
+
+  // 이미지 패널 초기화 (인트로 키 포함)
+  (function fillSceneSelect(){
+    const keys = ["인트로1","인트로2","인트로3","인트로4", ...LOCATIONS];
+    keys.forEach(k=>{
+      const opt=document.createElement("option");
+      opt.value=k; opt.textContent=k;
+      sceneSelect.appendChild(opt);
+    });
+  })();
+  applyImg.onclick=()=>{
+    const file=fileInput.files?.[0];
+    const key=sceneSelect.value;
+    if(!file) return alert("이미지 파일을 선택하세요!");
+    const url=URL.createObjectURL(file);
+    SCENE_IMAGES[key]=url;
+    if(currentLocation===key) showScene(key);
+    alert(`장면 "${key}" 이미지 등록 완료!`);
+  };
+
+  function setActions(list=[]){
+    actionOverlay.innerHTML="";
+    list.forEach(cfg=>{
+      const b=document.createElement("button"); b.className="btn"; b.textContent=cfg.label;
+      if(cfg.primary) b.style.outline=`1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--accent')}`;
+      b.onclick=cfg.onClick;
+      actionOverlay.appendChild(b);
+    });
+  }
 
   function go(loc){
     currentLocation = loc;
-    locationName.textContent = loc;
+    locationTag.textContent = loc;
+    showScene(loc);
     updateStats();
-    actionArea.innerHTML="";
-
-    // location-specific greeting + actions
+    // 장소별 안내 + 액션
     if(loc==="튜토리얼"){
-      type("튜토리얼: 엔터로 대사를 넘기고, 하단 행동 버튼을 눌러보세요. 좌측 하단 '장소 이동'으로 다른 곳에 갈 수 있습니다.");
-      addBtn("초기 보상 받기", ()=>{ gainItem("스크랩",2); player.honor+=1; player.turn++; updateStats(); }, true);
+      const actions=[];
+      if(!starterClaimed){
+        actions.push({
+          label:"초기 보상 받기 (1회)",
+          primary:true,
+          onClick:()=>{
+            if(starterClaimed) return;
+            starterClaimed = true;
+            gainItem("스크랩",2); player.honor+=1; player.turn++; updateStats();
+            say("초기 보상 수령: 스크랩 x2, 명예 +1", "튜토리얼");
+            setActions([]); // 버튼 제거
+          }
+        });
+      }
+      setActions(actions);
+      say("튜토리얼: 좌측 스탯을 확인하고, 하단 대사는 엔터로 넘길 수 있습니다. 좌하단 '장소 이동'으로 다른 장소로 이동하세요.", "튜토리얼");
     }
     else if(loc==="고물가게"){
-      type("고물가게: 돈과 명예를 지불해 특별한 아이템으로 교환합니다.");
-      JUNK_EXCHANGE.forEach(e=>{
-        addBtn(`교환: ${e.name} (돈 ${e.money}원 + 명예 ${e.honor})`, ()=>{
+      setActions(JUNK_EXCHANGE.map(e=>({
+        label:`교환: ${e.name} (돈 ${e.money} + 명예 ${e.honor})`,
+        onClick:()=>{
           if(player.money<e.money) return alert("돈이 부족합니다.");
           if(player.honor<e.honor) return alert("명예가 부족합니다.");
           player.money-=e.money; player.honor-=e.honor; gainItem(e.name,1); player.turn++; updateStats();
-        });
-      });
+          say(`${e.name}을(를) 획득했다!`, "고물가게");
+        }
+      })));
+      say("고물가게: 돈과 명예를 지불해 아이템을 얻습니다.", "고물가게");
     }
     else if(loc==="푸코상점"){
-      type("푸코상점: 일반 아이템을 구매할 수 있습니다.");
-      FUKO_SHOP.forEach(it=>{
-        addBtn(`구매: ${it.name} (${it.price}원)`, ()=>{
+      setActions(FUKO_SHOP.map(it=>({
+        label:`구매: ${it.name} (${it.price}원)`,
+        onClick:()=>{
           if(player.money<it.price) return alert("돈이 부족합니다.");
           player.money-=it.price; gainItem(it.name,1); player.turn++; updateStats();
-        });
-      });
+          say(`${it.name} 구매 완료.`, "푸코상점");
+        }
+      })));
+      say("푸코상점: 일반 아이템 판매 중.", "푸코상점");
     }
     else if(loc==="헬스장"){
-      type("헬스장: 2000원을 내고 훈련하여 최대체력을 올립니다.");
-      addBtn("운동하기 (2000원, 최대체력+5)", ()=>{
-        if(player.money<2000) return alert("돈이 부족합니다.");
-        player.money-=2000; player.hpMax+=5; player.hp=Math.min(player.hpMax, player.hp+5);
-        player.turn++; updateStats(); message("땀을 불태웠다! 최대체력 +5");
-      }, true);
+      setActions([{
+        label:"운동하기 (2000원, 최대체력+5)",
+        primary:true,
+        onClick:()=>{
+          if(player.money<2000) return alert("돈이 부족합니다.");
+          player.money-=2000; player.hpMax+=5; player.hp=Math.min(player.hpMax, player.hp+5);
+          player.turn++; updateStats(); say("땀을 불태웠다! 최대체력 +5", "헬스장");
+        }
+      }]);
+      say("헬스장: 2000원을 내고 최대체력을 올릴 수 있습니다.", "헬스장");
     }
     else if(loc==="도서관"){
-      type("도서관: 2000원을 내고 집중 독서하여 지능을 올립니다.");
-      addBtn("독서하기 (2000원, 지능+1)", ()=>{
-        if(player.money<2000) return alert("돈이 부족합니다.");
-        player.money-=2000; player.int+=1; player.turn++; updateStats(); message("지식이 머릿속을 스친다! 지능 +1");
-      }, true);
+      setActions([{
+        label:"독서하기 (2000원, 지능+1)",
+        primary:true,
+        onClick:()=>{
+          if(player.money<2000) return alert("돈이 부족합니다.");
+          player.money-=2000; player.int+=1; player.turn++; updateStats(); say("지식이 스며든다! 지능 +1", "도서관");
+        }
+      }]);
+      say("도서관: 지능을 올릴 수 있습니다.", "도서관");
     }
     else if(loc==="도박장"){
-      type("도박장: 슬롯머신! 1000원으로 운을 시험해 보세요.");
-      addBtn("슬롯 돌리기 (1000원)", ()=>slotSpin(), true);
-      const box=document.createElement("div"); box.id="slotBox"; box.style.marginTop="8px"; box.className="muted";
-      box.textContent="결과 대기중...";
-      actionArea.appendChild(box);
+      setActions([{
+        label:"슬롯 돌리기 (1000원)",
+        primary:true,
+        onClick:()=>slotSpin()
+      }]);
+      say("도박장: 3칸 슬롯, 1000원 베팅. (3같음=10000 / 2같음=3000 / 그외=0)", "도박장");
     }
     else if(loc==="과학실"){
-      type("과학실: 무기 강화. 2000원, 성공 확률 60% (성공시 공격력 +1).");
-      addBtn("강화 시도 (2000원)", ()=>{
-        if(player.money<2000) return alert("돈이 부족합니다.");
-        player.money-=2000; player.turn++;
-        if(Math.random()<0.6){ player.atk+=1; message("강화 성공! 공격력 +1"); }
-        else { message("강화 실패... 변화 없음"); }
-        updateStats();
-      }, true);
+      setActions([{
+        label:"강화 시도 (2000원, 60%)",
+        primary:true,
+        onClick:()=>{
+          if(player.money<2000) return alert("돈이 부족합니다.");
+          player.money-=2000; player.turn++;
+          if(Math.random()<0.6){ player.atk+=1; say("강화 성공! 공격력 +1", "과학실"); }
+          else { say("강화 실패... 변화 없음", "과학실"); }
+          updateStats();
+        }
+      }]);
+      say("과학실: 장비 강화 연구.", "과학실");
     }
     else if(loc==="제련소"){
-      type("제련소: 재료로 장비 제작. 스크랩 x3 → 스크랩소드(공+3)");
-      addBtn("제작: 스크랩소드 (스크랩 x3)", ()=>{
-        if((player.inventory["스크랩"]||0)<3) return alert("스크랩이 부족합니다.");
-        consumeItem("스크랩",3); gainItem("스크랩소드",1); player.turn++; updateStats();
-      }, true);
+      setActions([{
+        label:"제작: 스크랩소드 (스크랩 x3)",
+        primary:true,
+        onClick:()=>{
+          if((player.inventory["스크랩"]||0)<3) return alert("스크랩이 부족합니다.");
+          consumeItem("스크랩",3); gainItem("스크랩소드",1); player.turn++; updateStats();
+          say("제작 완료! 스크랩소드 획득 (공+3)", "제련소");
+        }
+      }]);
+      say("제련소: 재료로 무기를 만듭니다.", "제련소");
     }
     else if(loc==="정보거래소"){
-      type("정보거래소: 1500원에 던전 힌트를 삽니다.");
-      addBtn("힌트 구매 (1500원)", ()=>{
-        if(player.money<1500) return alert("돈이 부족합니다.");
-        player.money-=1500; player.turn++; updateStats();
-        message("힌트: 오늘 던전은 '전기'에 약하다. 치명타를 노려라!");
-      }, true);
+      setActions([{
+        label:"힌트 구매 (1500원)",
+        primary:true,
+        onClick:()=>{
+          if(player.money<1500) return alert("돈이 부족합니다.");
+          player.money-=1500; player.turn++; updateStats();
+          say("힌트: 오늘 던전은 '전기'에 약하다. 치명타를 노려라!", "정보거래소");
+        }
+      }]);
+      say("정보거래소: 돈으로 정보를 삽니다.", "정보거래소");
     }
     else if(loc==="판매소"){
-      type("판매소: 아이템을 50% 가격으로 판매합니다.");
-      // 동적 판매 목록
+      const acts=[];
       for(const [k,v] of Object.entries(player.inventory)){
         const base = ITEMS[k]?.price ?? 100;
-        addBtn(`판매: ${k} x1 (${Math.floor(base*0.5)}원)`, ()=>{
-          if(!consumeItem(k,1)) return alert("수량 부족");
-          player.money += Math.floor(base*0.5);
-          player.turn++; updateStats(); renderInventory();
-          message(`${k}을(를) 팔았다.`);
+        acts.push({
+          label:`판매: ${k} x1 (${Math.floor(base*0.5)}원)`,
+          onClick:()=>{
+            if(!consumeItem(k,1)) return alert("수량 부족");
+            player.money += Math.floor(base*0.5);
+            player.turn++; updateStats(); say(`${k} 판매 완료.`, "판매소");
+            go("판매소"); // 목록 갱신
+          }
         });
       }
-      if(Object.keys(player.inventory).length===0){
-        const span=document.createElement("div"); span.className="muted"; span.textContent="판매할 아이템이 없습니다.";
-        actionArea.appendChild(span);
-      }
+      setActions(acts);
+      say(acts.length? "판매소: 아이템을 팔 수 있습니다." : "판매소: 판매할 아이템이 없습니다.", "판매소");
     }
     else if(loc==="던전"){
       startDungeon();
     }
-
-    document.onkeydown = (e)=>{
-      if(e.key==="Enter" && !typingLock && !choices.firstChild){
-        // 기본은 메시지 유지
-      }
-    };
-
     updateStats();
-  }
-
-  function addBtn(label, fn, primary=false){
-    const b=document.createElement("button");
-    b.className="btn"; if(primary) b.style.outline=`1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--accent')}`;
-    b.textContent=label; b.onclick=fn; actionArea.appendChild(b);
   }
 
   // ---------- Gambling (Slots) ----------
@@ -362,91 +481,80 @@
     const r1=symbols[Math.floor(Math.random()*symbols.length)];
     const r2=symbols[Math.floor(Math.random()*symbols.length)];
     const r3=symbols[Math.floor(Math.random()*symbols.length)];
-    const box=document.getElementById("slotBox");
-    box.textContent=`[ ${r1} | ${r2} | ${r3} ]`;
     let reward=0, note="";
     if(r1===r2 && r2===r3){ reward=10000; note="대박!"; }
     else if(r1===r2 || r2===r3 || r1===r3){ reward=3000; note="중박!"; }
-    else reward=0;
-    if(reward>0){ player.money+=reward; message(`슬롯 결과: ${note} +${reward.toLocaleString()}원`); }
-    else { message("슬롯 결과: 꽝..."); }
+    if(reward>0){ player.money+=reward; say(`슬롯: [ ${r1} | ${r2} | ${r3} ]  → ${note} +${reward.toLocaleString()}원`, "도박장"); }
+    else { say(`슬롯: [ ${r1} | ${r2} | ${r3} ]  → 꽝...`, "도박장"); }
     updateStats();
   }
 
-  // ---------- Dungeon (Combat) ----------
+  // ---------- Dungeon ----------
   function startDungeon(){
-    locationName.textContent="던전";
+    showScene("던전");
     dungeonExtra.classList.remove("hidden");
     const enemy = { name:"폐허의 고블린", hpMax:60, hp:60, atk:8, reward:1200 };
-    type(`던전: ${enemy.name} 등장! 마나와 치명타 UI가 활성화되었습니다.`);
-    actionArea.innerHTML="";
-    const hud=document.createElement("div"); hud.className="muted"; hud.style.margin="6px 0 8px";
-    const hpE=document.createElement("div"); hpE.textContent=`적 HP: ${enemy.hp}/${enemy.hpMax}`;
-    hud.appendChild(hpE); actionArea.appendChild(hud);
+    const buttons = [];
+    function refresh(){ updateStats(); }
+    say(`던전: ${enemy.name} 등장! (마나/치명타 표시 활성화)`, "던전");
 
-    function refresh(){ hpE.textContent=`적 HP: ${enemy.hp}/${enemy.hpMax}`; updateStats(); }
-
-    addBtn("공격", ()=>{
-      const crit = Math.random()*100 < player.crit;
-      const dmg = Math.max(1, player.atk - 0) * (crit?2:1);
-      enemy.hp = Math.max(0, enemy.hp - dmg);
-      message(`공격! ${crit?"치명타! ":""}${dmg} 피해`);
-      player.turn++;
-      if(enemy.hp<=0){ win(); return; }
-      enemyTurn();
-      refresh();
-    }, true);
-
-    addBtn("스킬(마나10)", ()=>{
-      if(player.mp<10) return alert("마나가 부족합니다!");
-      player.mp-=10;
-      const dmg = Math.max(1, (player.atk + Math.floor(player.int*0.5)) * 2);
-      enemy.hp = Math.max(0, enemy.hp - dmg);
-      message(`스킬 발동! ${dmg} 피해`);
-      player.turn++;
-      if(enemy.hp<=0){ win(); return; }
-      enemyTurn();
-      refresh();
+    buttons.push({
+      label:"공격",
+      primary:true,
+      onClick:()=>{
+        const crit = Math.random()*100 < player.crit;
+        const dmg = Math.max(1, player.atk - 0) * (crit?2:1);
+        enemy.hp = Math.max(0, enemy.hp - dmg);
+        say(`공격! ${crit?"치명타! ":""}${dmg} 피해`, "던전");
+        player.turn++;
+        if(enemy.hp<=0) return win();
+        enemyTurn(); refresh();
+      }
     });
-
-    addBtn("도망", ()=>{
-      message("무사히 빠져나왔다...");
-      go("튜토리얼");
+    buttons.push({
+      label:"스킬(마나10)",
+      onClick:()=>{
+        if(player.mp<10) return alert("마나가 부족합니다!");
+        player.mp-=10;
+        const dmg = Math.max(1, (player.atk + Math.floor(player.int*0.5)) * 2);
+        enemy.hp = Math.max(0, enemy.hp - dmg);
+        say(`스킬 발동! ${dmg} 피해`, "던전");
+        player.turn++;
+        if(enemy.hp<=0) return win();
+        enemyTurn(); refresh();
+      }
     });
+    buttons.push({
+      label:"도망",
+      onClick:()=>{ say("무사히 빠져나왔다...", "튜토리얼"); go("튜토리얼"); }
+    });
+    setActions(buttons);
 
     function enemyTurn(){
       const edmg = Math.max(1, enemy.atk - player.def);
       player.hp = Math.max(0, player.hp - edmg);
-      tip(`적의 반격 ${edmg} 피해`);
       if(player.hp<=0){ lose(); }
     }
     function win(){
-      message(`승리! ${enemy.reward}원과 명예 +1, 스크랩 x1 획득`);
+      say(`승리! ${enemy.reward}원, 명예 +1, 스크랩 x1 획득`, "던전");
       player.money+=enemy.reward; player.honor+=1; gainItem("스크랩",1);
       player.turn++; updateStats();
-      addBtn("던전 종료", ()=>go("튜토리얼"), true);
+      setActions([{label:"던전 종료", primary:true, onClick:()=>go("튜토리얼")}]);
     }
     function lose(){
-      message("패배... 겨우 목숨을 건졌다. (체력 1로 복귀)");
+      say("패배... 가까스로 탈출했다. (체력 1)", "던전");
       player.hp=1; player.turn++; updateStats();
-      addBtn("던전 나가기", ()=>go("튜토리얼"), true);
+      setActions([{label:"던전 나가기", primary:true, onClick:()=>go("튜토리얼")}]);
     }
-
-    updateStats();
   }
 
   // ---------- Start ----------
   function start(){
-    currentLocation="인트로";
+    // 장면 선택 리스트에 현재 위치들 이미 채워둠
+    showScene("인트로1");
     updateStats();
-    nextIntro();
+    const first = intro[introIdx++]; say(first.text, first.scene);
   }
-
-  // Open menus
-  document.addEventListener("click",(e)=>{
-    if(!locationList.contains(e.target) && e.target!==locationBtn){ locationList.style.display="none"; }
-    if(!inventoryPanel.contains(e.target) && e.target!==inventoryBtn){ inventoryPanel.style.display="none"; }
-  });
 
   start();
 })();
